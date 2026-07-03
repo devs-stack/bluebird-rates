@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blue Bird Rates</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { 
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      padding: 10px; 
+      color: #0f172a; 
+    }
+    .header-panel { 
+      background: white;
+      border-radius: 10px; 
+      padding: 15px; 
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+      margin-bottom: 15px; 
+    }
+    @media (min-width: 768px) {
+      body { padding: 15px; }
+      .header-panel { padding: 20px; }
+    }
+    .booking-card { 
+      background: white;
+      border-radius: 8px; 
+      border: 1px solid #e2e8f0; 
+      padding: 16px; 
+      margin-bottom: 15px; 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02); 
+      transition: all 0.2s ease;
+      position: relative; 
+      overflow: hidden; 
+    }
+    .booking-card:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    }
+    .meta-label { 
+      font-size: 11px; 
+      text-transform: uppercase; 
+      color: #64748b; 
+      font-weight: 600; 
+      margin-bottom: 2px;
+    }
+    .meta-value { 
+      font-size: 13px; 
+      color: #1e293b; 
+      margin-bottom: 10px; 
+      word-break: break-word;
+    }
+    .spot-badge { 
+      background-color: #fee2e2; 
+      color: #b91c1c; 
+      font-weight: bold; 
+      border-radius: 4px; 
+      padding: 2px 6px; 
+      font-size: 11px;
+      display: inline-block; 
+    }
+    
+    .gatekeeper-overlay { 
+      position: fixed;
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(15, 23, 42, 0.8); 
+      backdrop-filter: blur(6px); 
+      z-index: 2000; 
+      display: flex;
+      align-items: center; 
+      justify-content: center; 
+      padding: 15px; 
+    }
+    .gatekeeper-card { 
+      background: white; 
+      padding: 30px; 
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); 
+      max-width: 380px; 
+      width: 100%; 
+      border: 1px solid #e2e8f0;
+    }
+
+    @media (max-width: 767.98px) {
+      .mobile-border-fix {
+        border-left: none !important;
+        padding-left: 12px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="securityGateway" class="gatekeeper-overlay">
+    <div class="gatekeeper-card text-center">
+      <h5 class="fw-bold text-dark mb-1">Gatekeeper Authorization</h5>
+      <p class="text-muted small mb-4">Enter team passcode to decrypt core rate matrix</p>
+      <div class="mb-3">
+        <input type="password" id="gatePasscode" placeholder="*******" class="form-control text-center font-monospace" onkeydown="if(event.key==='Enter') verifyPasscode()">
+      </div>
+      <button onclick="verifyPasscode()" class="btn btn-primary w-100 fw-semibold">Unlock Portal</button>
+      <div id="lockError" class="text-danger small fw-bold mt-2 d-none">Invalid team passcode. Access denied.</div>
+    </div>
+  </div>
+
+  <div id="mainAppContent" class="container-fluid d-none" style="max-width: 1150px; margin: 0 auto;">
+    
+    <div class="header-panel d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+      <div>
+        <h1 class="m-0" style="font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">BLUE BIRD FREIGHT FINDER</h1>
+        <p class="m-0 text-muted" style="font-size: 13px;">Live corporate ocean freight query tariff portal</p>
+      </div>
+    </div>
+
+    <div class="header-panel">
+      <div class="row g-3">
+        <div class="col-12 col-md-4">
+          <label class="meta-label">Port of Loading (POL)</label>
+          <select id="pol" class="form-select" disabled>
+            <option value="">Connecting database...</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="meta-label">Port of Discharge (POD)</label>
+          <select id="pod" class="form-select" disabled>
+            <option value="">Connecting database...</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-4">
+          <label class="meta-label">Equipment Profile</label>
+          <select id="equipment" class="form-select" disabled>
+            <option value="">Connecting database...</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="d-flex justify-content-md-end mt-3">
+        <button id="searchBtn" onclick="runRateSearchQuery()" class="btn btn-primary px-4 py-2 w-100 w-md-auto fw-bold" disabled>
+          🔍 Search Spot Tariffs
+        </button>
+      </div>
+    </div>
+
+    <div class="mb-2 p-2 bg-white rounded border shadow-sm d-flex justify-content-between align-items-center px-3 mb-3">
+      <div class="d-flex align-items-center gap-2">
+        <span class="meta-label text-dark m-0">Active Freight Match Results</span>
+        <span id="resultCount" class="badge bg-secondary rounded-pill font-weight-bold">0 options</span>
+      </div>
+      <div>
+        <button id="layoutToggleBtn" onclick="toggleLayoutMode()" class="btn btn-sm btn-outline-secondary fw-bold px-3 py-1.5" disabled>
+          📋 Switch to Tabular View
+        </button>
+      </div>
+    </div>
+
+    <div id="resultsWrapper">
+      <div class="header-panel text-center text-muted py-5">
+        <p class="m-0 small">Select parameters above to execute search operations on backend rates matrix data rows.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // CRITICAL API ROUTING ASSIGNMENT
+    const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbweKqCDR5OjOmZHbHagWYdHaiLJ4f9nacOzEqSkQpYr0bobFcCpv0dX5Fn-Cu5xMvQmZw/exec"; 
+    
+    let cachedResultsGlobal = [];
+    let activeLayoutMode = "grid"; 
+    let globalPasscode = ""; 
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById("gatePasscode").focus();
+    });
+
+    function verifyPasscode() {
+      const inputPass = document.getElementById("gatePasscode").value;
+      document.getElementById("lockError").classList.add("d-none");
+
+      fetch(BACKEND_API_URL, {
+        method: "POST",
+        body: JSON.stringify({ passcode: inputPass, action: "getDropdowns" })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          document.getElementById("lockError").classList.remove("d-none");
+          document.getElementById("gatePasscode").value = "";
+        } else {
+          globalPasscode = inputPass; 
+          document.getElementById("securityGateway").classList.add("d-none");
+          document.getElementById("mainAppContent").classList.remove("d-none");
+          
+          populateSelectBox("pol", data.pols, "Choose Origin Port...");
+          populateSelectBox("pod", data.pods, "Choose Discharge Destination...");
+          populateSelectBox("equipment", data.equipments, "Choose Container Type...");
+          document.getElementById("searchBtn").disabled = false;
+        }
+      })
+      .catch(err => alert("Authorization Error: " + err.message));
+    }
+
+    function populateSelectBox(elementId, textArray, textPlaceholder) {
+      const field = document.getElementById(elementId);
+      field.innerHTML = `<option value="">-- ${textPlaceholder} --</option>`;
+      textArray.forEach(val => {
+        let opt = document.createElement("option");
+        opt.value = val;
+        opt.textContent = val;
+        field.appendChild(opt);
+      });
+      field.disabled = false;
+    }
+
+    function runRateSearchQuery() {
+      const polVal = document.getElementById("pol").value;
+      const podVal = document.getElementById("pod").value;
+      const equipVal = document.getElementById("equipment").value;
+
+      if (!polVal || !podVal || !equipVal) {
+        alert("Please complete selections.");
+        return;
+      }
+
+      document.getElementById("resultsWrapper").innerHTML = `
+        <div class="header-panel text-center py-4">
+          <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+          <div class="small text-muted">Retrieving ocean tariffs...</div>
+        </div>`;
+
+      fetch(BACKEND_API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          passcode: globalPasscode,
+          action: "searchRates",
+          pol: polVal,
+          pod: podVal,
+          equipment: equipVal
+        })
+      })
+      .then(res => res.json())
+      .then(results => {
+        cachedResultsGlobal = results;
+        document.getElementById("layoutToggleBtn").disabled = (results.length === 0);
+        renderOutputEngine();
+      })
+      .catch(err => {
+        document.getElementById("resultsWrapper").innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+      });
+    }
+
+    function toggleLayoutMode() {
+      const btn = document.getElementById("layoutToggleBtn");
+      if (activeLayoutMode === "grid") {
+        activeLayoutMode = "table";
+        btn.textContent = "📦 Switch to Grid View";
+      } else {
+        activeLayoutMode = "grid";
+        btn.textContent = "📋 Switch to Tabular View";
+      }
+      renderOutputEngine();
+    }
+
+    function renderOutputEngine() {
+      const container = document.getElementById("resultsWrapper");
+      document.getElementById("resultCount").textContent = `${cachedResultsGlobal.length} option(s)`;
+      
+      if (cachedResultsGlobal.length === 0) {
+        container.innerHTML = `<div class="header-panel text-center text-muted py-4">No matching freight rows found.</div>`;
+        return;
+      }
+
+      if (activeLayoutMode === "grid") {
+        let html = "";
+        cachedResultsGlobal.forEach(item => {
+          const rateDisplay = typeof item.rate === 'number' ? `$${item.rate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : item.rate;
+          const spotBadge = item.spot === 'YES' ? `<span class="spot-badge">SPOT</span>` : '';
+
+          html += `
+            <div class="booking-card">
+              <div class="row align-items-stretch">
+                <div class="col-12 col-md-7">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="m-0 text-primary" style="font-weight:700; font-size:16px;">🚢 Line: ${item.carrier}</h5>
+                  </div>
+                  <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">
+                    Rate Profile: <span style="color:#2563eb; font-weight:800;">${rateDisplay}</span> ${spotBadge}
+                  </div>
+                  <div class="text-muted" style="font-size:11px; margin-top: 5px;">
+                    System Log Sync Clock Time: ${item.updated}
+                  </div>
+                </div>
+                <div class="col-12 col-md-5 mt-3 mt-md-0 border-top border-md-start pt-3 pt-md-0 d-flex flex-column justify-content-center mobile-border-fix" style="padding-left: 20px;">
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <div class="meta-label">Free Time (FT)</div>
+                      <div class="meta-value" style="font-weight:600;">⏱️ ${item.ft} Days</div>
+                    </div>
+                    <div class="col-6">
+                      <div class="meta-label">Transit Time (TT)</div>
+                      <div class="meta-value">${item.tt ? item.tt + ' Days' : '-'}</div>
+                    </div>
+                    <div class="col-6">
+                      <div class="meta-label">Routing</div>
+                      <div class="meta-value font-weight-bold text-dark">${item.routing}</div>
+                    </div>
+                    <div class="col-6">
+                      <div class="meta-label">Tariff Validity</div>
+                      <div class="meta-value text-success font-weight-bold">📅 ${item.validity}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>`;
+        });
+        container.innerHTML = html;
+
+      } else {
+        let tableRowsHtml = "";
+        cachedResultsGlobal.forEach(item => {
+          const rateDisplay = typeof item.rate === 'number' ? `$${item.rate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : item.rate;
+          const spotBadge = item.spot === 'YES' ? `<span class="spot-badge">SPOT</span>` : '<span class="text-muted">-</span>';
+
+          tableRowsHtml += `
+            <tr>
+              <td class="fw-bold align-middle">🚢 ${item.carrier}</td>
+              <td class="fw-bold text-primary align-middle" style="font-size:14px;">${rateDisplay}</td>
+              <td class="align-middle fw-semibold">⏱️ ${item.ft} Days</td>
+              <td class="align-middle">${item.tt ? item.tt + ' Days' : '-'}</td>
+              <td class="align-middle fw-medium">${item.routing}</td>
+              <td class="align-middle">${spotBadge}</td>
+              <td class="align-middle text-secondary fw-semibold">📅 ${item.validity}</td>
+              <td class="align-middle text-end text-muted font-monospace" style="font-size: 11px;">${item.updated}</td>
+            </tr>`;
+        });
+
+        container.innerHTML = `
+          <div class="header-panel p-0 overflow-hidden border">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle m-0" style="font-size: 13px;">
+                <thead class="table-light">
+                  <tr>
+                    <th class="meta-label py-3 px-3">Shipping Line</th>
+                    <th class="meta-label py-3">Ocean Freight</th>
+                    <th class="meta-label py-3">Free Time (FT)</th>
+                    <th class="meta-label py-3">Transit Time (TT)</th>
+                    <th class="meta-label py-3">Routing</th>
+                    <th class="meta-label py-3">Spot Flag</th>
+                    <th class="meta-label py-3">Tariff Validity</th>
+                    <th class="meta-label py-3 text-end px-3">Last Synchronized</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRowsHtml}
+                </tbody>
+              </table>
+            </div>
+          </div>`;
+      }
+    }
+  </script>
+</body>
+</html>
