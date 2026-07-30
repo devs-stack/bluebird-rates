@@ -7,409 +7,530 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
-      --glass-bg: rgba(255, 255, 255, 0.65);
-      --glass-bg-hover: rgba(255, 255, 255, 0.85);
-      --glass-border: rgba(255, 255, 255, 0.6);
-      --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+      /* Apple HIG System Palette */
+      --app-bg: #000000;
+      --surface-elevated: #1c1c1e;
+      --surface-secondary: #2c2c2e;
+      --surface-tertiary: #3a3a3c;
+      
+      --accent-primary: #0a84ff;
+      --accent-hover: #0071e3;
+      
+      --text-primary: #ffffff;
+      --text-secondary: #8e8e93;
+      --text-tertiary: #636366;
+      
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+
+      /* Liquid Glass Dynamics */
+      --glass-bg: rgba(30, 30, 30, 0.65);
       --glass-blur: blur(20px) saturate(180%);
-      --apple-radius: 16px;
+      --glass-border: inset 0 1px 1px 0 rgba(255, 255, 255, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      
+      /* Apple Squircle Geometry */
+      --radius-squircle: 22px;
+      --radius-pill: 9999px;
     }
 
+    @media (prefers-color-scheme: light) {
+      :root {
+        --app-bg: #f2f2f7;
+        --surface-elevated: #ffffff;
+        --surface-secondary: #e5e5ea;
+        --surface-tertiary: #d1d1d6;
+        
+        --accent-primary: #007aff;
+        --accent-hover: #0056b3;
+        
+        --text-primary: #000000;
+        --text-secondary: #8e8e93;
+        --text-tertiary: #aeaeb2;
+        
+        --border-subtle: rgba(0, 0, 0, 0.06);
+        --border-strong: rgba(0, 0, 0, 0.12);
+
+        --glass-bg: rgba(255, 255, 255, 0.65);
+        --glass-border: inset 0 1px 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.08);
+      }
+    }
+
+    /* Core Layout & Typography */
     body { 
-      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 50%, #f1f5f9 100%);
-      background-attachment: fixed;
+      background-color: var(--app-bg);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
-      padding: 10px; 
-      color: #0f172a; 
+      padding: 16px; 
+      color: var(--text-primary); 
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* UI Panels */
-    .header-panel, 
-    .recent-searches-panel, 
-    .gatekeeper-card, 
-    .side-drawer,
-    .app-toast,
-    .compare-float-bar { 
+    /* Floating Liquid Glass Structural Components */
+    .glass-panel {
       background: var(--glass-bg);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--apple-radius); 
-      padding: 18px; 
-      box-shadow: var(--glass-shadow); 
-      margin-bottom: 15px; 
+      box-shadow: var(--glass-border);
+      border-radius: var(--radius-squircle);
+    }
+
+    .header-panel { 
+      background-color: var(--surface-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-squircle); 
+      padding: 24px; 
+      margin-bottom: 20px; 
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       position: relative;
     }
 
-    /* Sticky Search Header */
+    /* Typography Hierarchy */
+    h1, h5, h6 {
+      color: var(--text-primary);
+      letter-spacing: -0.4px;
+    }
+    p, .text-muted {
+      color: var(--text-secondary) !important;
+    }
+
+    /* Dynamic Sticky Search Bar */
     .sticky-top-glass {
       position: sticky;
-      top: 10px;
-      z-index: 1040 !important;
-      background: rgba(255, 255, 255, 0.72) !important;
-      backdrop-filter: blur(25px) saturate(200%) !important;
-      -webkit-backdrop-filter: blur(25px) saturate(200%) !important;
-      border: 1px solid rgba(255, 255, 255, 0.8) !important;
-      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.1) !important;
+      top: 12px;
+      z-index: 1050 !important;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-border);
+      border-radius: var(--radius-squircle);
       overflow: visible !important;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @media (min-width: 768px) {
-      body { padding: 20px; }
-      .header-panel { padding: 22px; }
-      .sticky-top-glass { top: 20px; }
+    .sticky-top-glass.scrolled-compact {
+      border-radius: var(--radius-pill) !important;
+      padding: 12px 24px !important;
+      cursor: pointer;
     }
 
-    /* Result Cards */
+    .sticky-top-glass.scrolled-compact:hover {
+      transform: scale(1.01);
+    }
+
+    .compact-summary-bar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .sticky-top-glass.scrolled-compact .compact-summary-bar {
+      display: flex;
+      animation: fadeInLiquid 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .sticky-top-glass.scrolled-compact .full-search-form {
+      display: none !important;
+    }
+
+    .compact-route-text {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compact-route-text .route-arrow {
+      color: var(--accent-primary);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .compact-equip-badge {
+      background: var(--surface-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+    }
+
+    .route-arrow-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-primary);
+      font-size: 20px;
+      font-weight: 700;
+      padding-top: 18px;
+    }
+
+    @media (max-width: 767.98px) {
+      .route-arrow-wrapper {
+        padding-top: 0;
+        margin: -4px 0;
+        transform: rotate(90deg);
+      }
+      body { padding: 10px; }
+      .header-panel { padding: 18px; }
+      .sticky-top-glass { top: 8px; }
+      .sticky-top-glass.scrolled-compact {
+        padding: 8px 16px !important;
+      }
+      .compact-route-text { font-size: 13px; }
+    }
+
+    /* Content Cards (Solid Elevated Surfaces) */
     .booking-card { 
-      background: #ffffff !important;
-      border-radius: 14px; 
-      border: 1px solid #e2e8f0; 
-      padding: 18px; 
-      margin-bottom: 15px; 
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      background: var(--surface-elevated) !important;
+      border-radius: var(--radius-squircle); 
+      border: 1px solid var(--border-subtle); 
+      padding: 24px; 
+      margin-bottom: 20px; 
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
       position: relative; 
       overflow: hidden; 
       outline: none;
     }
     .booking-card:hover, .booking-card:focus-within { 
       transform: translateY(-2px); 
-      box-shadow: 0 12px 24px -4px rgba(0,0,0,0.08);
-    }
-    .booking-card.selected-card {
-      border-color: #3b82f6 !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+      border-color: var(--border-strong);
     }
     .booking-card.card-expired {
-      opacity: 0.65;
-      background-color: #f8fafc !important;
+      opacity: 0.6;
     }
 
-    /* Autocomplete Container */
     .autocomplete-container {
       position: relative;
-      z-index: 1;
+      z-index: 1060;
     }
     .autocomplete-container.active-focus {
-      z-index: 2000;
+      z-index: 1070;
     }
 
+    /* Native-Style Inputs */
     .apple-input {
-      background: rgba(255, 255, 255, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-subtle);
       border-radius: 12px;
       padding: 10px 14px;
       font-size: 13px;
       font-weight: 500;
-      color: #0f172a;
+      color: var(--text-primary);
       width: 100%;
       outline: none;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .apple-input::placeholder {
+      color: var(--text-tertiary);
     }
     .apple-input:focus {
-      background: rgba(255, 255, 255, 0.95);
-      border-color: #0071e3;
-      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.2), 0 8px 16px rgba(0,0,0,0.06);
+      background: var(--surface-elevated);
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
     }
     .apple-input:disabled {
-      background: rgba(241, 245, 249, 0.6);
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    /* Dropdown Suggestions */
+    @keyframes instantClearFlash {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+    .input-cleared-flash {
+      animation: instantClearFlash 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Liquid Glass Autocomplete Dropdown */
     .autocomplete-suggestions {
       position: absolute;
       top: calc(100% + 8px);
       left: 0;
       right: 0;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(30px) saturate(200%);
-      -webkit-backdrop-filter: blur(30px) saturate(200%);
-      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-border), 0 12px 32px rgba(0,0,0,0.4);
       border-radius: 16px;
-      box-shadow: 
-        0 20px 40px -10px rgba(15, 23, 42, 0.18),
-        0 0 0 1px rgba(0, 0, 0, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
       max-height: 260px;
       overflow-y: auto;
-      z-index: 99999 !important;
+      z-index: 999999 !important;
       display: none;
-      padding: 8px;
+      padding: 6px;
       margin: 0;
       list-style: none;
     }
 
-    .autocomplete-suggestions::-webkit-scrollbar {
-      width: 6px;
-    }
-    .autocomplete-suggestions::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    .autocomplete-suggestions::-webkit-scrollbar-thumb {
-      background: rgba(0, 0, 0, 0.15);
-      border-radius: 10px;
-    }
-
     .autocomplete-suggestions.show {
       display: block;
-      animation: fadeInLiquid 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: fadeInLiquid 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
+
     @keyframes fadeInLiquid {
-      from { 
-        opacity: 0; 
-        transform: translateY(-10px) scale(0.98); 
-      }
-      to { 
-        opacity: 1; 
-        transform: translateY(0) scale(1); 
-      }
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .autocomplete-suggestion-item {
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 500;
-      color: #1e293b;
+      color: var(--text-primary);
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: background 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
     .autocomplete-suggestion-item:hover,
     .autocomplete-suggestion-item.active {
-      background: linear-gradient(135deg, #0071e3 0%, #005bb5 100%);
+      background: var(--accent-primary);
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
     }
 
-    /* Recent Searches */
-    .recent-searches-panel {
-      padding: 12px 18px;
-    }
+    /* System Micro-Pills */
+    .recent-searches-panel { padding: 14px 20px; }
     .recent-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(255, 255, 255, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.8);
-      border-radius: 20px;
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-pill);
       padding: 6px 14px;
       font-size: 12px;
       font-weight: 500;
-      color: #334155;
+      color: var(--text-primary);
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: all 0.2s ease;
     }
     .recent-pill:hover {
-      background: #ffffff;
-      border-color: #0071e3;
-      color: #0071e3;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,113,227,0.12);
+      background: var(--surface-tertiary);
+      border-color: var(--border-strong);
     }
 
     .meta-label { 
       font-size: 11px; 
       text-transform: uppercase; 
-      color: #64748b; 
+      color: var(--text-secondary); 
       font-weight: 600; 
-      margin-bottom: 6px;
-      letter-spacing: 0.3px;
+      margin-bottom: 4px;
+      letter-spacing: 0.5px;
     }
     .meta-value { 
-      font-size: 13px; 
-      color: #1e293b; 
-      margin-bottom: 10px; 
+      font-size: 13.5px; 
+      color: var(--text-primary); 
+      margin-bottom: 8px; 
       word-break: break-word;
+      font-weight: 500;
     }
     
-    /* Badges */
+    /* System Badges */
     .apple-badge {
       display: inline-flex;
       align-items: center;
-      gap: 3px;
-      padding: 3px 8px;
+      gap: 4px;
+      padding: 4px 10px;
       border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
       line-height: 1.2;
     }
-    .badge-cheapest { background-color: #dcfce7; color: #15803d; }
-    .badge-fastest { background-color: #e0f2fe; color: #0369a1; }
-    .badge-freetime { background-color: #e0e7ff; color: #4338ca; }
-    .badge-bestvalue { background-color: #f3e8ff; color: #6b21a8; }
-    .badge-expired { background-color: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
-    .badge-spot { background-color: #fef3c7; color: #b45309; }
+    .badge-cheapest { background: rgba(52, 199, 89, 0.15); color: #30d158; }
+    .badge-fastest { background: rgba(10, 132, 255, 0.15); color: #0a84ff; }
+    .badge-freetime { background: rgba(94, 92, 230, 0.15); color: #5e5ce6; }
+    .badge-bestvalue { background: rgba(191, 90, 242, 0.15); color: #bf5af2; }
+    .badge-expired { background: rgba(255, 69, 58, 0.15); color: #ff453a; }
+    .badge-spot { background: rgba(255, 159, 10, 0.15); color: #ff9f0a; }
     
     .spot-badge { 
-      background-color: #fee2e2; 
-      color: #b91c1c; 
-      font-weight: bold; 
-      border-radius: 4px; 
-      padding: 2px 6px; 
+      background: rgba(255, 159, 10, 0.15); 
+      color: #ff9f0a; 
+      font-weight: 600; 
+      border-radius: 6px; 
+      padding: 3px 8px; 
       font-size: 11px;
       display: inline-block; 
     }
 
-    /* Action Buttons */
+    /* Native Actions */
     .quick-action-btn {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 11px;
-      color: #475569;
+      background: var(--surface-secondary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      color: var(--text-primary);
       font-weight: 500;
-      transition: all 0.15s ease;
+      transition: background 0.15s ease;
       display: inline-flex;
       align-items: center;
       gap: 4px;
       cursor: pointer;
     }
     .quick-action-btn:hover {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: var(--surface-tertiary);
     }
+
     .fav-star {
       cursor: pointer;
       font-size: 16px;
-      color: #cbd5e1;
-      transition: color 0.2s ease, transform 0.2s ease;
+      color: var(--text-tertiary);
+      transition: transform 0.2s ease, color 0.2s ease;
       user-select: none;
     }
-    .fav-star.active { color: #f59e0b; }
+    .fav-star.active { color: #ffd60a; }
     .fav-star:hover { transform: scale(1.15); }
     
+    /* Gatekeeper Modal Overlays */
     .gatekeeper-overlay { 
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%; 
-      background: rgba(15, 23, 42, 0.4); 
-      backdrop-filter: blur(16px); 
-      -webkit-backdrop-filter: blur(16px);
+      background: rgba(0, 0, 0, 0.6); 
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
       z-index: 10000; 
       display: flex; align-items: center; justify-content: center; padding: 15px; 
     }
     .gatekeeper-card { 
-      max-width: 380px; width: 100%; 
-      border: 1px solid rgba(255, 255, 255, 0.8);
+      max-width: 380px; 
+      width: 100%; 
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-subtle); 
+      border-radius: var(--radius-squircle);
+      padding: 28px;
     }
 
-    /* Compare Bar */
+    /* Floating Liquid Compare Dock */
     .compare-float-bar {
       position: fixed;
-      bottom: 20px;
+      bottom: 24px;
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: rgba(15, 23, 42, 0.88);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      color: white;
-      padding: 10px 24px;
-      border-radius: 40px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      transform: translateX(-50%) translateY(120px);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-border), 0 20px 40px rgba(0,0,0,0.5);
+      color: var(--text-primary);
+      padding: 12px 24px;
+      border-radius: var(--radius-pill);
       z-index: 1050;
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       align-items: center;
-      gap: 15px;
+      gap: 16px;
       margin-bottom: 0;
     }
     .compare-float-bar.active { transform: translateX(-50%) translateY(0); }
 
-    /* Side Drawer */
+    /* Side Drawer Liquid Glass Structure */
     .drawer-backdrop {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(15, 23, 42, 0.3); backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.4); 
+      backdrop-filter: blur(8px);
       z-index: 10050; opacity: 0; visibility: hidden; transition: opacity 0.3s ease;
     }
     .drawer-backdrop.active { opacity: 1; visibility: visible; }
     .side-drawer {
-      position: fixed; top: 0; right: -480px; width: 100%; max-width: 480px; height: 100vh;
+      position: fixed; top: 0; right: -500px; width: 100%; max-width: 480px; height: 100vh;
       border-radius: 0; z-index: 10060; transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex; flex-direction: column; padding: 0;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-border);
     }
     .side-drawer.active { right: 0; }
-    .drawer-header { padding: 20px 24px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); display: flex; justify-content: space-between; align-items: center; }
-    .drawer-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .drawer-header { padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; }
+    .drawer-body { padding: 24px; overflow-y: auto; flex: 1; }
     
     .btn-close-custom {
-      background: rgba(0, 0, 0, 0.05); border: none; border-radius: 50%;
-      width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-      font-weight: bold; color: #64748b; cursor: pointer;
+      background: var(--surface-secondary); border: none; border-radius: 50%;
+      width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+      font-weight: 600; color: var(--text-secondary); cursor: pointer; transition: background 0.15s ease;
     }
-    .btn-close-custom:hover { background: rgba(0, 0, 0, 0.1); color: #0f172a; }
+    .btn-close-custom:hover { background: var(--surface-tertiary); color: var(--text-primary); }
 
     .history-btn {
-      background: transparent; border: none; padding: 2px 6px; border-radius: 6px; cursor: pointer;
+      background: transparent; border: none; padding: 2px 4px; border-radius: 6px; cursor: pointer; transition: opacity 0.15s ease;
     }
-    .history-btn:hover { background-color: rgba(0,0,0,0.05); }
+    .history-btn:hover { opacity: 0.7; }
 
     .summary-card {
-      background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 12px; padding: 14px; margin-bottom: 16px;
+      background: var(--surface-elevated); border: 1px solid var(--border-subtle);
+      border-radius: 16px; padding: 18px; margin-bottom: 18px;
     }
     .timeline-item {
-      position: relative; padding-left: 20px; border-left: 2px solid rgba(0,0,0,0.1); padding-bottom: 16px;
+      position: relative; padding-left: 18px; border-left: 2px solid var(--border-strong); padding-bottom: 18px;
     }
     .timeline-item:last-child { padding-bottom: 0; border-left-color: transparent; }
     .timeline-item::before {
-      content: ''; position: absolute; left: -6px; top: 4px; width: 10px; height: 10px;
-      border-radius: 50%; background: #0071e3; border: 2px solid white;
+      content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--accent-primary);
     }
     .filter-chip {
-      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
-      background: rgba(255, 255, 255, 0.6); color: #475569; border: 1px solid rgba(0, 0, 0, 0.08);
-      cursor: pointer; transition: all 0.2s ease;
+      font-size: 11.5px; font-weight: 500; padding: 5px 12px; border-radius: var(--radius-pill);
+      background: var(--surface-secondary); color: var(--text-primary); border: 1px solid var(--border-subtle);
+      cursor: pointer; transition: all 0.15s ease;
     }
-    .filter-chip.active { background: #0071e3; color: #ffffff; border-color: #0071e3; }
+    .filter-chip.active { background: var(--accent-primary); color: #ffffff; border-color: var(--accent-primary); }
 
-    /* Toast */
+    /* System Toast (Liquid Floating Badge) */
     .app-toast {
-      position: fixed; bottom: 20px; right: 20px; background: rgba(15, 23, 42, 0.88);
-      color: white; padding: 10px 18px; border-radius: 12px; font-size: 13px;
-      font-weight: 500; box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 11000;
-      opacity: 0; pointer-events: none; transition: opacity 0.25s ease; margin-bottom: 0;
+      position: fixed; bottom: 24px; right: 24px; 
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-border), 0 12px 32px rgba(0,0,0,0.4);
+      color: var(--text-primary); padding: 10px 20px; border-radius: var(--radius-pill); font-size: 13px;
+      font-weight: 500; z-index: 11000;
+      opacity: 0; pointer-events: none; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+      transform: translateY(12px);
     }
-    .app-toast.show { opacity: 1; }
-
-    @media (max-width: 767.98px) {
-      .mobile-border-fix { border-left: none !important; padding-left: 12px !important; }
-      .side-drawer { max-width: 100%; right: -100%; }
-    }
+    .app-toast.show { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
 
-  <!-- Gatekeeper Modal -->
+  <!-- Gatekeeper Authorization Modal -->
   <div id="securityGateway" class="gatekeeper-overlay">
     <div class="gatekeeper-card text-center">
-      <h5 class="fw-bold text-dark mb-1">Gatekeeper Authorization</h5>
-      <p class="text-muted small mb-4">Enter team passcode to decrypt core rate matrix</p>
+      <h5 class="fw-bold mb-1">Gatekeeper Access</h5>
+      <p class="small mb-4">Enter team passcode to decrypt core matrix</p>
       <div class="mb-3">
-        <input type="password" id="gatePasscode" placeholder="*******" class="apple-input text-center font-monospace" onkeydown="if(event.key==='Enter') verifyPasscode()">
+        <input type="password" id="gatePasscode" placeholder="•••••••" class="apple-input text-center font-monospace" onkeydown="if(event.key==='Enter') verifyPasscode()">
       </div>
-      <button onclick="verifyPasscode()" class="btn btn-primary w-100 fw-semibold rounded-3 py-2" style="background:#0071e3; border:none;">Unlock Portal</button>
-      <div id="lockError" class="text-danger small fw-bold mt-2 d-none">Invalid team passcode. Access denied.</div>
+      <button onclick="verifyPasscode()" class="btn btn-primary w-100 fw-bold rounded-3 py-2" style="background:var(--accent-primary); border:none;">Unlock Portal</button>
+      <div id="lockError" class="text-danger small fw-bold mt-2 d-none">Invalid passcode. Access denied.</div>
     </div>
   </div>
 
-  <div id="mainAppContent" class="container-fluid d-none" style="max-width: 1150px; margin: 0 auto;">
+  <div id="mainAppContent" class="container-fluid d-none" style="max-width: 1180px; margin: 0 auto;">
     
-    <!-- STICKY TOP SEARCH BAR -->
-    <div class="header-panel sticky-top-glass">
-      <div class="row g-3 align-items-end">
-        
-        <!-- POL Autocomplete Field -->
+    <!-- Dynamic Sticky Search Bar (Liquid Glass) -->
+    <div id="stickyHeader" class="header-panel sticky-top-glass" onclick="handleHeaderClick()">
+      
+      <!-- Scrolled Compact Summary State -->
+      <div class="compact-summary-bar">
+        <div class="compact-route-text">
+          <span id="compactPolText">Origin Port</span>
+          <span class="route-arrow">➔</span>
+          <span id="compactPodText">Discharge Port</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span id="compactEquipText" class="compact-equip-badge">20'GP</span>
+          <button class="btn btn-sm btn-primary rounded-circle p-1 d-flex align-items-center justify-content-center" style="width:28px; height:28px; background:var(--accent-primary); border:none;">🔍</button>
+        </div>
+      </div>
+
+      <!-- Expanded State Form -->
+      <div class="full-search-form row g-2 align-items-end">
         <div class="col-12 col-md-3">
           <label class="meta-label">Port of Loading (POL)</label>
           <div class="autocomplete-container" id="polContainer">
@@ -419,7 +540,10 @@
           </div>
         </div>
 
-        <!-- POD Autocomplete Field -->
+        <div class="col-12 col-md-1 route-arrow-wrapper">
+          ➔
+        </div>
+
         <div class="col-12 col-md-3">
           <label class="meta-label">Port of Discharge (POD)</label>
           <div class="autocomplete-container" id="podContainer">
@@ -429,7 +553,6 @@
           </div>
         </div>
 
-        <!-- Equipment Autocomplete Field -->
         <div class="col-12 col-md-3">
           <label class="meta-label">Equipment Profile</label>
           <div class="autocomplete-container" id="equipContainer">
@@ -439,24 +562,22 @@
           </div>
         </div>
 
-        <!-- Execute Search Button -->
-        <div class="col-12 col-md-3">
-          <button id="searchBtn" onclick="runRateSearchQuery()" class="btn btn-primary px-4 py-2 w-100 fw-bold rounded-3" style="background:#0071e3; border:none;" disabled>
-            🔍 Search Tariffs
+        <div class="col-12 col-md-2">
+          <button id="searchBtn" onclick="runRateSearchQuery()" class="btn btn-primary px-3 py-2 w-100 fw-bold rounded-3" style="background:var(--accent-primary); border:none;" disabled>
+            🔍 Search
           </button>
         </div>
-
       </div>
     </div>
 
-    <!-- Header Portal Info Panel -->
-    <div class="header-panel d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <!-- Header App Overview Container -->
+    <div class="header-panel d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="position: relative; z-index: 10;">
       <div>
-        <h1 class="m-0" style="font-size: 20px; font-weight: 700; letter-spacing: -0.5px;">BLUE BIRD FREIGHT FINDER</h1>
-        <p class="m-0 text-muted" style="font-size: 13px;">Live corporate ocean freight query tariff portal</p>
+        <h1 class="m-0" style="font-size: 22px; font-weight: 700;">BLUE BIRD FREIGHT FINDER</h1>
+        <p class="m-0" style="font-size: 13.5px;">Live corporate ocean freight query tariff portal</p>
       </div>
       <div class="d-flex align-items-center gap-2">
-        <span class="badge bg-white text-dark border px-2 py-1 font-monospace" style="font-size:11px; border-radius:6px;">Shortcuts: Ctrl+F, Esc</span>
+        <span class="badge border px-3 py-2 font-monospace" style="font-size:11px; border-radius:8px; background: var(--surface-secondary); color: var(--text-secondary); border-color: var(--border-subtle) !important;">Shortcuts: Ctrl+F, Esc</span>
       </div>
     </div>
 
@@ -470,37 +591,37 @@
     </div>
 
     <!-- Live Statistics Banner Header -->
-    <div id="statsBanner" class="header-panel py-2 px-3 d-none">
+    <div id="statsBanner" class="header-panel py-3 px-3 d-none">
       <div class="row text-center g-2 align-items-center">
-        <div class="col-6 col-sm-4 col-md-2 border-end">
+        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
           <div class="meta-label" style="font-size: 9px;">Matches</div>
-          <div class="fw-bold text-dark" style="font-size: 13px;" id="statMatchCount">0</div>
+          <div class="fw-bold" style="font-size: 14px;" id="statMatchCount">0</div>
         </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end">
+        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
           <div class="meta-label" style="font-size: 9px;">Cheapest Rate</div>
-          <div class="fw-bold text-success" style="font-size: 13px;" id="statCheapestRate">-</div>
+          <div class="fw-bold" style="font-size: 14px; color: #30d158;" id="statCheapestRate">-</div>
         </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end">
+        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
           <div class="meta-label" style="font-size: 9px;">Average Rate</div>
-          <div class="fw-bold text-primary" style="font-size: 13px;" id="statAverageRate">-</div>
+          <div class="fw-bold" style="font-size: 14px; color: var(--accent-primary);" id="statAverageRate">-</div>
         </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end">
+        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
           <div class="meta-label" style="font-size: 9px;">Highest Rate</div>
-          <div class="fw-bold text-danger" style="font-size: 13px;" id="statHighestRate">-</div>
+          <div class="fw-bold" style="font-size: 14px; color: #ff453a;" id="statHighestRate">-</div>
         </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end">
+        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
           <div class="meta-label" style="font-size: 9px;">Lowest TT / Max FT</div>
-          <div class="fw-bold text-dark" style="font-size: 12px;" id="statTtFt">-</div>
+          <div class="fw-bold" style="font-size: 13px;" id="statTtFt">-</div>
         </div>
         <div class="col-6 col-sm-4 col-md-2">
           <div class="meta-label" style="font-size: 9px;">Spot / Expired</div>
-          <div class="fw-bold text-muted" style="font-size: 12px;" id="statSpotExpired">-</div>
+          <div class="fw-bold text-muted" style="font-size: 13px;" id="statSpotExpired">-</div>
         </div>
       </div>
     </div>
 
-    <!-- Multi-criteria Filters Controls Bar -->
-    <div id="filterControlsBar" class="header-panel py-2 px-3 d-none">
+    <!-- Criteria Filters & Options Bar -->
+    <div id="filterControlsBar" class="header-panel py-3 px-3 d-none">
       <div class="row g-2 align-items-center">
         <div class="col-12 col-md-3">
           <label class="meta-label" style="font-size:10px;">Sort Results By</label>
@@ -549,62 +670,63 @@
 
         <div class="col-6 col-md-3 text-md-end">
           <label class="meta-label d-block" style="font-size:10px;">View Mode</label>
-          <button id="layoutToggleBtn" onclick="toggleLayoutMode()" class="btn btn-sm btn-outline-secondary fw-bold px-3 py-1 rounded-3" disabled>
+          <button id="layoutToggleBtn" onclick="toggleLayoutMode()" class="quick-action-btn py-2 px-3 fw-bold" disabled>
             📋 Switch to Tabular View
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Section Heading Label Bar -->
     <div class="header-panel p-2 d-flex justify-content-between align-items-center px-3 mb-3">
       <div class="d-flex align-items-center gap-2">
-        <span class="meta-label text-dark m-0">Active Freight Match Results</span>
-        <span id="resultCount" class="badge bg-secondary rounded-pill font-weight-bold">0 options</span>
+        <span class="meta-label m-0" style="font-size:12px;">Active Freight Match Results</span>
+        <span id="resultCount" class="badge rounded-pill font-weight-bold" style="background: var(--surface-secondary); color: var(--text-primary);">0 options</span>
       </div>
     </div>
 
     <div id="resultsWrapper">
-      <div class="header-panel text-center text-muted py-5">
+      <div class="header-panel text-center py-5">
         <p class="m-0 small">Select parameters above to execute search operations on backend rates matrix data rows.</p>
       </div>
     </div>
 
   </div>
 
-  <!-- Floating Comparison Trigger Bar -->
+  <!-- Floating Liquid Compare Action Trigger Dock -->
   <div id="compareFloatBar" class="compare-float-bar">
-    <div><span class="fw-bold" id="compareCountText">0</span> items selected for comparison</div>
+    <div><span class="fw-bold" id="compareCountText">0</span> items selected</div>
     <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-light fw-bold rounded-3" onclick="openCompareModal()">Compare Selected</button>
-      <button class="btn btn-sm btn-link text-white-50 text-decoration-none" onclick="clearSelectedCompare()">Clear</button>
+      <button class="btn btn-sm btn-primary fw-bold rounded-pill px-3" style="background:var(--accent-primary); border:none;" onclick="openCompareModal()">Compare</button>
+      <button class="btn btn-sm btn-link text-decoration-none" style="color:var(--text-secondary);" onclick="clearSelectedCompare()">Clear</button>
     </div>
   </div>
 
-  <!-- Compare Modal -->
+  <!-- Rate Comparison Modal -->
   <div class="modal fade" id="compareModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content border-0 shadow-lg" style="border-radius:18px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+      <div class="modal-content" style="border-radius: var(--radius-squircle); background: var(--surface-elevated); border: 1px solid var(--border-subtle);">
         <div class="modal-header border-bottom-0 pb-0">
           <h6 class="modal-title fw-bold">Rate Comparison Matrix</h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="button" class="btn-close-custom" data-bs-dismiss="modal" aria-label="Close">✕</button>
         </div>
         <div class="modal-body">
           <div class="table-responsive">
-            <table class="table table-bordered align-middle text-center" style="font-size: 13px;" id="compareTable">
-              <thead class="table-light"><tr><th class="text-start">Feature</th></tr></thead>
+            <table class="table align-middle text-center" style="font-size: 13px; color: var(--text-primary); border-color: var(--border-subtle);" id="compareTable">
+              <thead><tr><th class="text-start">Feature</th></tr></thead>
               <tbody></tbody>
             </table>
           </div>
         </div>
         <div class="modal-footer border-top-0 pt-0">
-          <button class="btn btn-sm btn-outline-secondary rounded-3" onclick="copyComparisonTableText()">Copy Comparison</button>
-          <button class="btn btn-sm btn-primary rounded-3" style="background:#0071e3;" data-bs-dismiss="modal">Close</button>
+          <button class="btn btn-sm btn-outline-secondary rounded-3 fw-bold" onclick="copyComparisonTableText()">Copy Matrix</button>
+          <button class="btn btn-sm btn-primary rounded-3 fw-bold" style="background:var(--accent-primary); border:none;" data-bs-dismiss="modal">Close</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- History Drawer -->
+  <!-- Historical Timeline Drawer -->
   <div id="drawerBackdrop" class="drawer-backdrop" onclick="closeHistoryDrawer()"></div>
   <div id="historyDrawer" class="side-drawer">
     <div class="drawer-header">
@@ -617,38 +739,38 @@
     <div class="drawer-body">
       <div class="d-flex gap-1 flex-wrap mb-3" id="historyFilters">
         <button class="filter-chip active" onclick="applyHistoryTimeFilter('all', this)">All History</button>
-        <button class="filter-chip" onclick="applyHistoryTimeFilter('30', this)">Last 30 Days</button>
-        <button class="filter-chip" onclick="applyHistoryTimeFilter('90', this)">Last 90 Days</button>
-        <button class="filter-chip" onclick="applyHistoryTimeFilter('180', this)">Last 6 Months</button>
-        <button class="filter-chip" onclick="applyHistoryTimeFilter('365', this)">Last Year</button>
+        <button class="filter-chip" onclick="applyHistoryTimeFilter('30', this)">30 Days</button>
+        <button class="filter-chip" onclick="applyHistoryTimeFilter('90', this)">90 Days</button>
+        <button class="filter-chip" onclick="applyHistoryTimeFilter('180', this)">6 Months</button>
+        <button class="filter-chip" onclick="applyHistoryTimeFilter('365', this)">1 Year</button>
       </div>
 
       <div class="summary-card" id="historySummaryCard">
         <div class="row g-2 text-center mb-2">
           <div class="col-4">
             <div class="meta-label" style="font-size: 9px;">Current</div>
-            <div class="fw-bold text-primary" style="font-size: 13px;" id="statCurrent">-</div>
+            <div class="fw-bold" style="font-size: 13px; color:var(--accent-primary);" id="statCurrent">-</div>
           </div>
           <div class="col-4">
             <div class="meta-label" style="font-size: 9px;">Lowest</div>
-            <div class="fw-bold text-success" style="font-size: 13px;" id="statLowest">-</div>
+            <div class="fw-bold" style="font-size: 13px; color:#30d158;" id="statLowest">-</div>
           </div>
           <div class="col-4">
             <div class="meta-label" style="font-size: 9px;">Highest</div>
-            <div class="fw-bold text-danger" style="font-size: 13px;" id="statHighest">-</div>
+            <div class="fw-bold" style="font-size: 13px; color:#ff453a;" id="statHighest">-</div>
           </div>
         </div>
-        <div class="row g-2 text-center pt-2 border-top">
+        <div class="row g-2 text-center pt-2 border-top" style="border-color: var(--border-subtle) !important;">
           <div class="col-6">
             <div class="meta-label" style="font-size: 9px;">Average</div>
-            <div class="fw-bold text-dark" style="font-size: 12px;" id="statAverage">-</div>
+            <div class="fw-bold" style="font-size: 12px;" id="statAverage">-</div>
           </div>
           <div class="col-6">
             <div class="meta-label" style="font-size: 9px;">Total Quotes</div>
-            <div class="fw-bold text-dark" style="font-size: 12px;" id="statCount">-</div>
+            <div class="fw-bold" style="font-size: 12px;" id="statCount">-</div>
           </div>
         </div>
-        <div class="mt-3 pt-2 border-top text-center" id="sparklineWrapper">
+        <div class="mt-3 pt-2 border-top text-center" style="border-color: var(--border-subtle) !important;" id="sparklineWrapper">
           <div class="meta-label mb-1" style="font-size: 9px;">Rate Trend Sparkline</div>
           <svg id="sparklineSvg" width="100%" height="36" style="overflow: visible;"></svg>
         </div>
@@ -658,6 +780,7 @@
     </div>
   </div>
 
+  <!-- System Floating Toast Feedback -->
   <div id="appToast" class="app-toast">Copied to clipboard!</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -668,17 +791,18 @@
     let searchCacheMap = new Map(); 
     let activeLayoutMode = "grid"; 
     let globalPasscode = ""; 
+    let isHeaderCompact = false;
 
     let masterData = { pol: [], pod: [], equipment: [] };
     let favoritedCarriers = JSON.parse(localStorage.getItem("bb_favorite_carriers") || "[]");
     let selectedCompareCarriers = new Set();
     let activeHistoryRecords = [];
-    let currentHistoryCarrier = "";
 
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById("gatePasscode").focus();
       setupKeyboardShortcuts();
       initRecentSearches();
+      setupScrollHeaderListener();
     });
 
     function showToast(msg) {
@@ -688,10 +812,52 @@
       setTimeout(() => toast.classList.remove("show"), 2000);
     }
 
+    /* SCROLL LISTENER FOR LIQUID GLASS HEADER COMPACTION */
+    function setupScrollHeaderListener() {
+      window.addEventListener('scroll', () => {
+        const header = document.getElementById("stickyHeader");
+        const scrollPosition = window.scrollY;
+
+        if (scrollPosition > 100 && !isHeaderCompact) {
+          collapseHeader();
+        } else if (scrollPosition <= 50 && isHeaderCompact) {
+          expandHeader();
+        }
+      });
+    }
+
+    function collapseHeader() {
+      const header = document.getElementById("stickyHeader");
+      const pol = document.getElementById("polInput").value || "Select POL";
+      const pod = document.getElementById("podInput").value || "Select POD";
+      const equip = document.getElementById("equipmentInput").value || "Profile";
+
+      document.getElementById("compactPolText").textContent = pol;
+      document.getElementById("compactPodText").textContent = pod;
+      document.getElementById("compactEquipText").textContent = equip;
+
+      header.classList.add("scrolled-compact");
+      isHeaderCompact = true;
+      closeAllSuggestions();
+    }
+
+    function expandHeader() {
+      const header = document.getElementById("stickyHeader");
+      header.classList.remove("scrolled-compact");
+      isHeaderCompact = false;
+    }
+
+    function handleHeaderClick() {
+      if (isHeaderCompact) {
+        expandHeader();
+      }
+    }
+
     function setupKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
           e.preventDefault();
+          expandHeader();
           const polInput = document.getElementById("polInput");
           if (polInput && !polInput.disabled) polInput.focus();
         } else if (e.key === 'Escape') {
@@ -736,7 +902,7 @@
       .catch(err => alert("Authorization Error: " + err.message));
     }
 
-    /* SMART AUTOCOMPLETE WITH DYNAMIC Z-INDEX ELEVATION */
+    /* AUTOCOMPLETE WITH INSTANT-CLEAR ON TAP */
     function setupSmartSearch(inputId, hiddenId, suggestionsId, containerId, dataset, placeholder) {
       const input = document.getElementById(inputId);
       const hidden = document.getElementById(hiddenId);
@@ -784,14 +950,24 @@
         activeIndex = -1;
       }
 
-      input.addEventListener("input", () => {
-        hidden.value = input.value;
-        renderSuggestions(input.value);
-      });
-
+      /* INSTANT CLEAR ON FOCUS/TAP */
       input.addEventListener("focus", () => {
+        if (isHeaderCompact) expandHeader();
         document.querySelectorAll('.autocomplete-container').forEach(c => c.classList.remove('active-focus'));
         container.classList.add("active-focus");
+        
+        input.value = "";
+        hidden.value = "";
+        
+        input.classList.remove("input-cleared-flash");
+        void input.offsetWidth;
+        input.classList.add("input-cleared-flash");
+
+        renderSuggestions("");
+      });
+
+      input.addEventListener("input", () => {
+        hidden.value = input.value;
         renderSuggestions(input.value);
       });
 
@@ -885,7 +1061,7 @@
       searches.forEach(s => {
         const pill = document.createElement("div");
         pill.className = "recent-pill";
-        pill.innerHTML = `<span>🕒 ${s.pol} ➔ ${s.pod}</span> <span class="badge bg-light text-secondary border font-monospace">${s.equipment}</span>`;
+        pill.innerHTML = `<span>🕒 ${s.pol} ➔ ${s.pod}</span> <span class="badge border font-monospace" style="background:var(--surface-tertiary); color:var(--text-secondary); border-color:var(--border-subtle)!important;">${s.equipment}</span>`;
         pill.onclick = () => applyRecentSearch(s.pol, s.pod, s.equipment);
         container.appendChild(pill);
       });
@@ -1126,7 +1302,7 @@
         container.innerHTML = `
           <div class="header-panel text-center py-5">
             <div class="mb-3" style="font-size:36px;">🔍</div>
-            <h6 class="fw-bold text-dark mb-2">No Matching Freight Rates Found</h6>
+            <h6 class="fw-bold mb-2">No Matching Freight Rates Found</h6>
             <p class="text-muted small mx-auto mb-0" style="max-width: 480px;">No tariffs matching current parameters.</p>
           </div>`;
         return;
@@ -1165,7 +1341,7 @@
                     <div class="d-flex align-items-center gap-2">
                       <input type="checkbox" class="form-check-input mt-0" style="cursor:pointer;" ${isChecked} onchange="toggleCompareSelection('${escapedCarrier}', this.checked)">
                       <span class="fav-star ${isFav ? 'active' : ''}" onclick="toggleFavoriteCarrier('${escapedCarrier}', event)" title="Star Favorite">★</span>
-                      <h5 class="m-0 text-primary fw-bold" style="font-size:16px;">🚢 ${item.carrier}</h5>
+                      <h5 class="m-0 fw-bold" style="font-size:17px; color:var(--accent-primary);">🚢 ${item.carrier}</h5>
                       <button class="history-btn" title="View Rate History" onclick="fetchAndDisplayHistory('${escapedCarrier}')">
                         <span style="font-size:13px;">🕒</span>
                       </button>
@@ -1175,7 +1351,7 @@
                   <div class="mb-2">${badgesHtml}</div>
 
                   <div class="d-flex align-items-baseline gap-2 mb-2">
-                    <span style="font-size: 18px; font-weight:800; color:#0071e3;">${rateDisplay}</span>
+                    <span style="font-size: 24px; font-weight:700;">${rateDisplay}</span>
                   </div>
 
                   <div class="d-flex gap-1 flex-wrap mb-2">
@@ -1189,11 +1365,11 @@
                   <div class="text-muted" style="font-size:11px;">Sync Clock: ${item.updated}</div>
                 </div>
 
-                <div class="col-12 col-md-5 mt-3 mt-md-0 border-top border-md-start pt-3 pt-md-0 d-flex flex-column justify-content-center mobile-border-fix" style="padding-left: 20px;">
+                <div class="col-12 col-md-5 mt-3 mt-md-0 border-top border-md-start pt-3 pt-md-0 d-flex flex-column justify-content-center mobile-border-fix" style="padding-left: 20px; border-color: var(--border-subtle) !important;">
                   <div class="row g-2">
                     <div class="col-6">
                       <div class="meta-label">Free Time (FT)</div>
-                      <div class="meta-value fw-semibold">⏱️ ${item.ft} Days</div>
+                      <div class="meta-value">⏱️ ${item.ft} Days</div>
                     </div>
                     <div class="col-6">
                       <div class="meta-label">Transit Time (TT)</div>
@@ -1201,7 +1377,7 @@
                     </div>
                     <div class="col-6">
                       <div class="meta-label">Routing</div>
-                      <div class="meta-value fw-bold text-dark">${item.routing}</div>
+                      <div class="meta-value fw-bold">${item.routing}</div>
                     </div>
                     <div class="col-6">
                       <div class="meta-label">Tariff Validity</div>
@@ -1225,29 +1401,29 @@
           const isChecked = selectedCompareCarriers.has(item.carrier) ? 'checked' : '';
 
           tableRowsHtml += `
-            <tr class="${expired ? 'table-light opacity-75' : ''}">
+            <tr class="${expired ? 'opacity-50' : ''}">
               <td class="align-middle text-center"><input type="checkbox" class="form-check-input" ${isChecked} onchange="toggleCompareSelection('${escapedCarrier}', this.checked)"></td>
               <td class="fw-bold align-middle">
                 <span class="fav-star ${isFav ? 'active' : ''} me-1" onclick="toggleFavoriteCarrier('${escapedCarrier}', event)">★</span>
                 🚢 ${item.carrier}
                 <button class="history-btn ms-1" onclick="fetchAndDisplayHistory('${escapedCarrier}')"><span style="font-size:12px;">🕒</span></button>
               </td>
-              <td class="fw-bold text-primary align-middle" style="font-size:14px; color:#0071e3 !important;">${rateDisplay}</td>
+              <td class="fw-bold align-middle" style="font-size:15px; color:var(--accent-primary) !important;">${rateDisplay}</td>
               <td class="align-middle fw-semibold">⏱️ ${item.ft} Days</td>
               <td class="align-middle">${item.tt ? item.tt + ' Days' : '-'}</td>
               <td class="align-middle fw-medium">${item.routing}</td>
               <td class="align-middle">${spotBadge}</td>
-              <td class="align-middle ${expired ? 'text-danger fw-bold' : 'text-secondary fw-semibold'}">📅 ${item.validity}</td>
+              <td class="align-middle ${expired ? 'text-danger fw-bold' : 'text-success fw-semibold'}">📅 ${item.validity}</td>
               <td class="align-middle text-end"><button class="quick-action-btn" onclick="copyFormattedQuote('${escapedCarrier}')">Copy Quote</button></td>
             </tr>`;
         });
 
         container.innerHTML = `
-          <div class="header-panel p-0 overflow-hidden border">
+          <div class="header-panel p-0 overflow-hidden" style="border: 1px solid var(--border-subtle);">
             <div class="table-responsive">
-              <table class="table table-hover align-middle m-0" style="font-size: 13px;">
-                <thead class="table-light">
-                  <tr>
+              <table class="table align-middle m-0" style="font-size: 13px; color: var(--text-primary); border-color: var(--border-subtle);">
+                <thead>
+                  <tr style="background: var(--surface-secondary);">
                     <th style="width:30px;"></th>
                     <th class="meta-label py-3 px-3">Carrier</th>
                     <th class="meta-label py-3">Ocean Freight</th>
@@ -1332,8 +1508,8 @@
       if (selectedItems.length === 0) return;
 
       const table = document.getElementById("compareTable");
-      let headerHtml = `<th class="text-start bg-light">Feature</th>`;
-      selectedItems.forEach(item => { headerHtml += `<th class="fw-bold text-primary">🚢 ${item.carrier}</th>`; });
+      let headerHtml = `<th class="text-start">Feature</th>`;
+      selectedItems.forEach(item => { headerHtml += `<th class="fw-bold" style="color:var(--accent-primary);">🚢 ${item.carrier}</th>`; });
       table.querySelector("thead tr").innerHTML = headerHtml;
 
       const attributes = [
@@ -1347,7 +1523,7 @@
 
       let bodyHtml = "";
       attributes.forEach(attr => {
-        bodyHtml += `<tr><td class="fw-semibold text-start bg-light">${attr.label}</td>`;
+        bodyHtml += `<tr><td class="fw-semibold text-start">${attr.label}</td>`;
         selectedItems.forEach(item => { bodyHtml += `<td>${attr.format(item[attr.key])}</td>`; });
         bodyHtml += `</tr>`;
       });
@@ -1383,7 +1559,6 @@
       const pod = document.getElementById("pod").value;
       const equipment = document.getElementById("equipment").value;
 
-      currentHistoryCarrier = carrierName;
       document.getElementById("drawerTitle").textContent = `${carrierName} Rate History`;
       document.getElementById("drawerSubtitle").textContent = `${pol} ➔ ${pod} | ${equipment}`;
       
@@ -1459,19 +1634,19 @@
         const numericRate = parseFloat(item.rate);
         const rateFormatted = !isNaN(numericRate) ? `$${numericRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : item.rate;
         const isSpot = (item.spot === 'YES' || item.spot === true);
-        const typeBadge = isSpot ? `<span class="spot-badge">SPOT</span>` : `<span class="badge bg-light text-dark border">Standard</span>`;
+        const typeBadge = isSpot ? `<span class="spot-badge">SPOT</span>` : `<span class="badge border" style="background:var(--surface-secondary); color:var(--text-secondary); border-color:var(--border-subtle)!important;">Standard</span>`;
 
         html += `
           <div class="timeline-item">
             <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="fw-bold text-primary" style="font-size: 14px; color:#0071e3 !important;">${rateFormatted}</span>
+              <span class="fw-bold" style="font-size: 14px; color:var(--accent-primary);">${rateFormatted}</span>
               ${typeBadge}
             </div>
             <div class="row g-1 text-muted mb-1" style="font-size: 11px;">
-              <div class="col-6">Valid Until: <strong class="text-dark">${item.validity || '-'}</strong></div>
-              <div class="col-6">FT: <strong class="text-dark">${item.ft || '-'} Days</strong></div>
-              <div class="col-6">TT: <strong class="text-dark">${item.tt ? item.tt + ' Days' : '-'}</strong></div>
-              <div class="col-6">Routing: <strong class="text-dark">${item.routing || '-'}</strong></div>
+              <div class="col-6">Valid Until: <strong>${item.validity || '-'}</strong></div>
+              <div class="col-6">FT: <strong>${item.ft || '-'} Days</strong></div>
+              <div class="col-6">TT: <strong>${item.tt ? item.tt + ' Days' : '-'}</strong></div>
+              <div class="col-6">Routing: <strong>${item.routing || '-'}</strong></div>
             </div>
             <div class="text-muted font-monospace" style="font-size: 10px;">
               Imported: ${item.updated || '-'}
@@ -1529,7 +1704,7 @@
 
       const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
       polyline.setAttribute("fill", "none");
-      polyline.setAttribute("stroke", "#0071e3");
+      polyline.setAttribute("stroke", "#0a84ff");
       polyline.setAttribute("stroke-width", "2");
       polyline.setAttribute("points", points);
 
@@ -1542,7 +1717,7 @@
         circle.setAttribute("cx", x);
         circle.setAttribute("cy", y);
         circle.setAttribute("r", "3");
-        circle.setAttribute("fill", "#0071e3");
+        circle.setAttribute("fill", "#0a84ff");
         
         const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
         title.textContent = `$${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
