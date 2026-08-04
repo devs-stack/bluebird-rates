@@ -798,7 +798,6 @@
     const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbweKqCDR5OjOmZHbHagWYdHaiLJ4f9nacOzEqSkQpYr0bobFcCpv0dX5Fn-Cu5xMvQmZw/exec"; 
     
     let cachedResultsGlobal = [];
-    let searchCacheMap = new Map(); 
     let activeLayoutMode = "grid"; 
     let globalPasscode = ""; 
     let isHeaderCompact = false;
@@ -886,7 +885,8 @@
 
       fetch(BACKEND_API_URL, {
         method: "POST",
-        body: JSON.stringify({ passcode: inputPass, action: "getDropdowns" })
+        body: JSON.stringify({ passcode: inputPass, action: "getDropdowns" }),
+        cache: "no-store"
       })
       .then(res => res.json())
       .then(data => {
@@ -1093,7 +1093,7 @@
       showToast("Search history cleared.");
     }
 
-    /* RATE SEARCH CONTROLLER */
+    /* RATE SEARCH CONTROLLER (DIRECT LIVE FETCH - OPTION A) */
     function runRateSearchQuery() {
       const polVal = document.getElementById("pol").value;
       const podVal = document.getElementById("pod").value;
@@ -1106,22 +1106,15 @@
 
       saveRecentSearch(polVal, podVal, equipVal);
 
-      const cacheKey = `${polVal}|${podVal}|${equipVal}`;
-      if (searchCacheMap.has(cacheKey)) {
-        cachedResultsGlobal = searchCacheMap.get(cacheKey);
-        setupFilterControls();
-        processAndRenderResults();
-        return;
-      }
-
       document.getElementById("resultsWrapper").innerHTML = `
         <div class="header-panel text-center py-5">
           <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-          <div class="small text-muted">Retrieving ocean tariffs matrix...</div>
+          <div class="small text-muted">Retrieving live ocean tariffs matrix...</div>
         </div>`;
 
       fetch(BACKEND_API_URL, {
         method: "POST",
+        cache: "no-store",
         body: JSON.stringify({
           passcode: globalPasscode,
           action: "searchRates",
@@ -1133,7 +1126,6 @@
       .then(res => res.json())
       .then(results => {
         cachedResultsGlobal = results;
-        searchCacheMap.set(cacheKey, results);
         document.getElementById("layoutToggleBtn").disabled = (results.length === 0);
         setupFilterControls();
         processAndRenderResults();
@@ -1585,6 +1577,7 @@
 
       fetch(BACKEND_API_URL, {
         method: "POST",
+        cache: "no-store",
         body: JSON.stringify({
           passcode: globalPasscode,
           action: "getRateHistory",
