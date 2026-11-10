@@ -504,6 +504,52 @@
       transform: translateY(12px);
     }
     .app-toast.show { opacity: 1; transform: translateY(0); }
+    .quote-sheet {
+      width: min(100%, 440px);
+      max-width: 100%;
+      max-height: 92vh;
+      max-height: 92dvh;
+      padding: 20px;
+      border: 1px solid var(--border-strong);
+      border-radius: 22px;
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+      box-shadow: 0 16px 64px rgba(0, 0, 0, .35);
+    }
+    .quote-sheet::backdrop { background: rgba(0, 0, 0, .52); }
+    .quote-sheet header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .quote-close { min-height: 44px; color: var(--text-primary); }
+    .quote-context { font-size: .875rem; overflow-wrap: anywhere; }
+    .quote-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 52px;
+      padding: 8px 12px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: var(--surface-secondary);
+      cursor: pointer;
+    }
+    .quote-option + .quote-option { margin-top: 6px; }
+    .quote-option:has(input:checked) { border-color: var(--accent-primary); }
+    .quote-option input { accent-color: var(--accent-primary); }
+    .quote-option strong { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+    .quote-submit { min-height: 48px; }
+    .rate-trend { font-size: .8rem; font-weight: 700; white-space: nowrap; }
+    .rate-trend.up { color: #ff6961; }
+    .rate-trend.down { color: #30d158; }
+    @media (prefers-color-scheme: light) {
+      .rate-trend.up { color: #b42318; }
+      .rate-trend.down { color: #137333; }
+    }
+    @media (max-width: 575px) {
+      .quote-sheet {
+        margin: auto auto 0;
+        border-radius: 22px 22px 0 0;
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+      }
+    }
   </style>
 </head>
 <body>
@@ -755,7 +801,8 @@
         <button class="filter-chip" onclick="applyHistoryTimeFilter('365', this)">1 Year</button>
       </div>
 
-      <div class="summary-card" id="historySummaryCard">
+       <div class="summary-card d-none" id="historyTrendDetails"></div>
+       <div class="summary-card" id="historySummaryCard">
         <div class="row g-2 text-center mb-2">
           <div class="col-4">
             <div class="meta-label" style="font-size: 9px;">Current</div>
@@ -790,14 +837,37 @@
     </div>
   </div>
 
+  <dialog id="quoteSheet" class="quote-sheet" aria-labelledby="quoteTitle" aria-describedby="quoteContext">
+    <form id="quoteForm">
+      <header>
+        <h2 id="quoteTitle" class="h5 mb-0">Prepare Quote</h2>
+        <button type="button" id="quoteCancel" class="btn quote-close" autofocus>Cancel</button>
+      </header>
+      <p id="quoteContext" class="quote-context mb-3"></p>
+      <fieldset id="quoteOptions">
+        <legend class="visually-hidden">Quote price</legend>
+        <label class="quote-option"><input type="radio" name="quotePrice" value="10"><span>+10%</span><strong></strong></label>
+        <label class="quote-option"><input type="radio" name="quotePrice" value="12.5"><span>+12.5%</span><strong></strong></label>
+        <label class="quote-option"><input type="radio" name="quotePrice" value="15"><span>+15%</span><strong></strong></label>
+        <hr class="my-2">
+        <label class="quote-option"><input type="radio" name="quotePrice" value="net"><span>Net/Net<small class="d-block">Original carrier rate</small></span><strong></strong></label>
+      </fieldset>
+      <p id="quoteNotice" class="small mt-3 mb-0" role="status"></p>
+      <button type="submit" id="quoteSubmit" class="btn btn-primary w-100 mt-3 quote-submit" disabled>Copy Quote</button>
+    </form>
+  </dialog>
+
   <!-- System Floating Toast Feedback -->
-  <div id="appToast" class="app-toast">Copied to clipboard!</div>
+  <div id="appToast" class="app-toast" role="status">Copied to clipboard!</div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const BACKEND_API_URL = "https://script.google.com/macros/s/AKfycbweKqCDR5OjOmZHbHagWYdHaiLJ4f9nacOzEqSkQpYr0bobFcCpv0dX5Fn-Cu5xMvQmZw/exec"; 
     
     let cachedResultsGlobal = [];
+    let latestRateSearchId = 0;
+    let activeSearchRoute = null;
+    let activeQuote = null;
     let activeLayoutMode = "grid"; 
     let globalPasscode = ""; 
     let isHeaderCompact = false;
@@ -810,6 +880,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById("gatePasscode").focus();
       setupKeyboardShortcuts();
+      setupQuoteSheet();
       initRecentSearches();
       setupScrollHeaderListener();
     });
@@ -864,6 +935,7 @@
 
     function setupKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
+        if (document.getElementById("quoteSheet").open) return;
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
           e.preventDefault();
           expandHeader();
@@ -1104,6 +1176,7 @@
         return;
       }
 
+      const searchId = ++latestRateSearchId;
       saveRecentSearch(polVal, podVal, equipVal);
 
       document.getElementById("resultsWrapper").innerHTML = `
@@ -1125,12 +1198,15 @@
       })
       .then(res => res.json())
       .then(results => {
+        if (searchId !== latestRateSearchId) return;
+        activeSearchRoute = { pol: polVal, pod: podVal, equipment: equipVal };
         cachedResultsGlobal = results;
         document.getElementById("layoutToggleBtn").disabled = (results.length === 0);
         setupFilterControls();
         processAndRenderResults();
       })
       .catch(err => {
+        if (searchId !== latestRateSearchId) return;
         document.getElementById("resultsWrapper").innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
       });
     }
@@ -1220,21 +1296,22 @@
       if (statusFilter === "valid") results = results.filter(r => !isRateExpired(r.validity));
       else if (statusFilter === "expired") results = results.filter(r => isRateExpired(r.validity));
 
-      const validRates = results.map(r => r.rate).filter(r => typeof r === 'number' && !isNaN(r));
+      const currentResults = results.filter(r => !isRateExpired(r.validity));
+      const validRates = currentResults.map(r => r.rate).filter(r => typeof r === 'number' && !isNaN(r));
       const minRate = validRates.length ? Math.min(...validRates) : null;
       const maxRate = validRates.length ? Math.max(...validRates) : null;
       const avgRate = validRates.length ? validRates.reduce((a,b)=>a+b,0) / validRates.length : null;
 
-      const validTTs = results.map(r => parseInt(r.tt, 10)).filter(tt => !isNaN(tt));
+      const validTTs = currentResults.map(r => parseInt(r.tt, 10)).filter(tt => !isNaN(tt));
       const minTT = validTTs.length ? Math.min(...validTTs) : null;
 
-      const validFTs = results.map(r => parseInt(r.ft, 10)).filter(ft => !isNaN(ft));
+      const validFTs = currentResults.map(r => parseInt(r.ft, 10)).filter(ft => !isNaN(ft));
       const maxFT = validFTs.length ? Math.max(...validFTs) : null;
 
       let bestValueCarrier = null;
-      if (results.length > 0 && minRate !== null) {
+      if (minRate !== null) {
         let bestScore = Infinity;
-        results.forEach(r => {
+        currentResults.forEach(r => {
           const rateVal = typeof r.rate === 'number' ? r.rate : 99999;
           const ttVal = !isNaN(parseInt(r.tt,10)) ? parseInt(r.tt,10) : 30;
           const ftVal = !isNaN(parseInt(r.ft,10)) ? parseInt(r.ft,10) : 7;
@@ -1326,10 +1403,10 @@
             badgesHtml += `<span class="apple-badge badge-spot">⏳ Expires in ${daysDiff}d</span> `;
           }
 
-          if (item.rate === metrics.minRate) badgesHtml += `<span class="apple-badge badge-cheapest">🏆 Cheapest</span> `;
+          if (!expired && item.rate === metrics.minRate) badgesHtml += `<span class="apple-badge badge-cheapest">🏆 Cheapest</span> `;
           if (metrics.bestValueCarrier === item.carrier && !expired) badgesHtml += `<span class="apple-badge badge-bestvalue">💰 Best Value</span> `;
-          if (parseInt(item.tt,10) === metrics.minTT) badgesHtml += `<span class="apple-badge badge-fastest">⚡ Fastest TT</span> `;
-          if (parseInt(item.ft,10) === metrics.maxFT) badgesHtml += `<span class="apple-badge badge-freetime">⭐ Most FT</span> `;
+          if (!expired && parseInt(item.tt,10) === metrics.minTT) badgesHtml += `<span class="apple-badge badge-fastest">⚡ Fastest TT</span> `;
+          if (!expired && parseInt(item.ft,10) === metrics.maxFT) badgesHtml += `<span class="apple-badge badge-freetime">⭐ Most FT</span> `;
 
           if (item.spot === 'YES') badgesHtml += `<span class="spot-badge">SPOT</span> `;
 
@@ -1353,18 +1430,18 @@
                   <div class="mb-2">${badgesHtml}</div>
 
                   <div class="d-flex align-items-baseline gap-2 mb-2">
-                    <span style="font-size: 24px; font-weight:700;">${rateDisplay}</span>
+                    <span style="font-size: 24px; font-weight:700;">${rateDisplay}</span>${renderRateTrend(item)}
                   </div>
 
                   <div class="d-flex gap-1 flex-wrap mb-2">
                     <button class="quick-action-btn" onclick="copyText('${rateDisplay}')">📋 Rate</button>
                     <button class="quick-action-btn" onclick="copyText('${escapedCarrier}')">🚢 Carrier</button>
-                    <button class="quick-action-btn" onclick="copyFormattedQuote('${escapedCarrier}')">⚡ Quote</button>
+                    <button class="quick-action-btn" onclick="openQuoteSheet('${escapedCarrier}')">⚡ Quote</button>
                     <button class="quick-action-btn" onclick="copyAllDetails('${escapedCarrier}')">📄 All</button>
                     <button class="quick-action-btn" onclick="shareQuote('${escapedCarrier}')">🔗 Share</button>
                   </div>
 
-                  <div class="text-muted" style="font-size:11px;">Sync Clock: ${item.updated}</div>
+                  <div class="text-muted" style="font-size:11px;">Rate updated: ${item.updated}</div>
                 </div>
 
                 <div class="col-12 col-md-5 mt-3 mt-md-0 border-top border-md-start pt-3 pt-md-0 d-flex flex-column justify-content-center mobile-border-fix" style="padding-left: 20px; border-color: var(--border-subtle) !important;">
@@ -1410,13 +1487,13 @@
                 🚢 ${item.carrier}
                 <button class="history-btn ms-1" onclick="fetchAndDisplayHistory('${escapedCarrier}')"><span style="font-size:12px;">🕒</span></button>
               </td>
-              <td class="fw-bold align-middle" style="font-size:15px; color:var(--accent-primary) !important;">${rateDisplay}</td>
+              <td class="fw-bold align-middle" style="font-size:15px; color:var(--accent-primary) !important;">${rateDisplay} ${renderRateTrend(item)}</td>
               <td class="align-middle fw-semibold">⏱️ ${item.ft} Days</td>
               <td class="align-middle">${item.tt ? item.tt + ' Days' : '-'}</td>
               <td class="align-middle fw-medium">${item.routing}</td>
               <td class="align-middle">${spotBadge}</td>
               <td class="align-middle ${expired ? 'text-danger fw-bold' : 'text-success fw-semibold'}">📅 ${item.validity}</td>
-              <td class="align-middle text-end"><button class="quick-action-btn" onclick="copyFormattedQuote('${escapedCarrier}')">Copy Quote</button></td>
+              <td class="align-middle text-end"><button class="quick-action-btn" onclick="openQuoteSheet('${escapedCarrier}')">Quote</button></td>
             </tr>`;
         });
 
@@ -1450,17 +1527,130 @@
       showToast("Copied to clipboard!");
     }
 
-    function copyFormattedQuote(carrierName) {
+    const quoteAmountFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 20 });
+
+    function renderRateTrend(item) {
+      const percent = item.trend?.percent;
+      if (!Number.isFinite(percent) || isRateExpired(item.validity)) return "";
+
+      const basis = "the median of the previous 5 rates";
+      if (percent === 0) {
+        return ` <span class="rate-trend" title="Equal to ${basis}" aria-label="Equal to ${basis}">—</span>`;
+      }
+      const up = percent > 0;
+      const magnitude = Math.abs(percent);
+      const display = magnitude < 0.1 ? "&lt;0.1%" : `${magnitude.toLocaleString(undefined, { maximumFractionDigits: 1 })}%`;
+      const label = `${display} ${up ? "above" : "below"} ${basis}`;
+      return ` <span class="rate-trend ${up ? "up" : "down"}" title="${label}" aria-label="${label}">${up ? "▲" : "▼"} ${display}</span>`;
+    }
+
+    function getQuoteAmount(rate, option) {
+      if (option === "net") return rate;
+      const multiplier = 1000 + Number(option) * 10;
+      return Math.ceil((rate * multiplier) / 25000) * 25;
+    }
+
+    function formatQuote(quote, option) {
+      const { item, route, missingRate } = quote;
+      const amount = missingRate ? "-" : quoteAmountFormat.format(getQuoteAmount(item.rate, option));
+      const netLabel = !missingRate && option === "net" ? " (Net/Net)" : "";
+      return [
+        `POL: ${route.pol}`,
+        `POD: ${route.pod}`,
+        `Carrier: ${item.carrier}`,
+        `Equipment: ${route.equipment}`,
+        `Rate: USD ${amount}${netLabel}`,
+        `Transit: ${item.tt || "-"} Days`,
+        `Free Time: ${item.ft || "-"} Days`,
+        `Routing: ${item.routing}`,
+        `Validity: ${item.validity}`
+      ].join("\n");
+    }
+
+    function openQuoteSheet(carrierName) {
       const item = cachedResultsGlobal.find(r => r.carrier === carrierName);
-      if (!item) return;
+      if (!item || !activeSearchRoute) return;
 
-      const pol = document.getElementById("pol").value;
-      const pod = document.getElementById("pod").value;
-      const equipment = document.getElementById("equipment").value;
-      const rateDisplay = typeof item.rate === 'number' ? `USD ${item.rate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : item.rate;
+      const dialog = document.getElementById("quoteSheet");
+      const form = document.getElementById("quoteForm");
+      const missingRate = item.rateMissing || !Number.isFinite(item.rate);
+      activeQuote = { item, route: activeSearchRoute, missingRate, confirmingExpiry: false, copying: false };
+      form.reset();
+      const options = document.getElementById("quoteOptions");
+      options.hidden = missingRate;
+      for (const input of options.querySelectorAll("input")) {
+        input.closest("label").querySelector("strong").textContent =
+          missingRate ? "" : `$${quoteAmountFormat.format(getQuoteAmount(item.rate, input.value))}`;
+      }
+      const { pol, pod, equipment } = activeSearchRoute;
+      document.getElementById("quoteContext").textContent =
+        `${item.carrier} · ${pol} → ${pod} · ${equipment} · Validity: ${item.validity}`;
+      updateQuoteSheet();
+      dialog.showModal();
+      dialog.scrollTop = 0;
+    }
 
-      const quoteStr = `POL: ${pol}\nPOD: ${pod}\nCarrier: ${item.carrier}\nEquipment: ${equipment}\nRate: ${rateDisplay}\nTransit: ${item.tt ? item.tt + ' Days' : '-'}\nFree Time: ${item.ft} Days\nRouting: ${item.routing}\nValidity: ${item.validity}`;
-      copyText(quoteStr);
+    function updateQuoteSheet() {
+      const { item, missingRate, confirmingExpiry, copying } = activeQuote;
+      const option = document.getElementById("quoteForm").elements.quotePrice.value;
+      const submit = document.getElementById("quoteSubmit");
+      const notice = document.getElementById("quoteNotice");
+      submit.disabled = copying || (!missingRate && !option);
+      if (confirmingExpiry) {
+        submit.textContent = "Copy Expired Quote";
+        notice.textContent = "This rate has expired. Confirm that you want to copy it.";
+      } else {
+        submit.textContent = !missingRate && option
+          ? `Copy $${quoteAmountFormat.format(getQuoteAmount(item.rate, option))} Quote`
+          : "Copy Quote";
+        notice.textContent = [
+          isRateExpired(item.validity) ? "This rate has expired." : "",
+          missingRate ? "No price is available. The quote will show USD -." : ""
+        ].filter(Boolean).join(" ");
+      }
+    }
+
+    function setupQuoteSheet() {
+      const dialog = document.getElementById("quoteSheet");
+      const form = document.getElementById("quoteForm");
+      const cancel = document.getElementById("quoteCancel");
+      const options = document.getElementById("quoteOptions");
+      cancel.addEventListener("click", () => dialog.close());
+      dialog.addEventListener("cancel", event => {
+        if (activeQuote?.copying) event.preventDefault();
+      });
+      form.addEventListener("change", () => {
+        activeQuote.confirmingExpiry = false;
+        updateQuoteSheet();
+      });
+      form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const quote = activeQuote;
+        const option = form.elements.quotePrice.value;
+        if (quote.copying || (!quote.missingRate && !option)) return;
+        if (isRateExpired(quote.item.validity) && !quote.confirmingExpiry) {
+          quote.confirmingExpiry = true;
+          updateQuoteSheet();
+          return;
+        }
+
+        quote.copying = true;
+        cancel.disabled = true;
+        options.disabled = true;
+        updateQuoteSheet();
+        try {
+          await navigator.clipboard.writeText(formatQuote(quote, option));
+          dialog.close();
+          showToast("Quote copied");
+        } catch {
+          document.getElementById("quoteNotice").textContent = "Couldn’t copy the quote. Tap Copy to try again.";
+        } finally {
+          quote.copying = false;
+          cancel.disabled = false;
+          options.disabled = false;
+          document.getElementById("quoteSubmit").disabled = false;
+        }
+      });
     }
 
     function copyAllDetails(carrierName) {
@@ -1557,9 +1747,15 @@
     }
 
     function fetchAndDisplayHistory(carrierName) {
-      const pol = document.getElementById("pol").value;
-      const pod = document.getElementById("pod").value;
-      const equipment = document.getElementById("equipment").value;
+      if (!activeSearchRoute) return;
+      const { pol, pod, equipment } = activeSearchRoute;
+      const item = cachedResultsGlobal.find(r => r.carrier === carrierName);
+      const trendDetails = document.getElementById("historyTrendDetails");
+      const trend = item?.trend;
+      trendDetails.classList.toggle("d-none", !trend);
+      trendDetails.textContent = trend
+        ? `Latest rate: USD ${quoteAmountFormat.format(item.rate)} · 5-rate median: USD ${quoteAmountFormat.format(trend.median)} · Prior quote dates: ${trend.dates.join(", ")}`
+        : "";
 
       document.getElementById("drawerTitle").textContent = `${carrierName} Rate History`;
       document.getElementById("drawerSubtitle").textContent = `${pol} ➔ ${pod} | ${equipment}`;
