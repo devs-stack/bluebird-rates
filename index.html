@@ -34,9 +34,14 @@
       --border-strong: rgba(255, 255, 255, 0.16);
 
       /* Liquid Glass Dynamics */
-      --glass-bg: rgba(30, 30, 30, 0.65);
-      --glass-blur: blur(20px) saturate(180%);
-      --glass-border: inset 0 1px 1px 0 rgba(255, 255, 255, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      --glass-bg: rgba(30, 32, 38, .9);
+      --glass-blur: blur(20px) saturate(140%);
+      --glass-border: inset 0 1px 0 rgba(255, 255, 255, .2), 0 0 0 1px var(--border-subtle);
+      --glass-glint: rgba(255, 255, 255, .19);
+      --glass-tint: #394c64;
+      --quote-secondary: #b5bfce;
+      --menu-shadow: 0 14px 32px rgba(0, 0, 0, .42);
+      --spring-ease: cubic-bezier(.22, .8, .25, 1);
       
       /* Apple Squircle Geometry */
       --radius-squircle: 22px;
@@ -60,8 +65,12 @@
         --border-subtle: rgba(0, 0, 0, 0.06);
         --border-strong: rgba(0, 0, 0, 0.12);
 
-        --glass-bg: rgba(255, 255, 255, 0.65);
-        --glass-border: inset 0 1px 1px 0 rgba(255, 255, 255, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.08);
+        --glass-bg: rgba(249, 251, 255, .9);
+        --glass-border: inset 0 1px 0 rgba(255, 255, 255, .95), 0 0 0 1px var(--border-subtle);
+        --glass-glint: rgba(255, 255, 255, .94);
+        --glass-tint: #dceafe;
+        --quote-secondary: #536175;
+        --menu-shadow: 0 14px 32px rgba(25, 38, 62, .17);
       }
     }
 
@@ -104,43 +113,60 @@
     }
 
     /* Dynamic Sticky Search Bar */
-    .sticky-top-glass {
+    .search-anchor {
       position: sticky;
       top: 12px;
-      z-index: 1050 !important;
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-border);
-      border-radius: var(--radius-squircle);
-      overflow: visible !important;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1050;
+      height: var(--search-height, auto);
+      margin-bottom: 20px;
+      pointer-events: none;
+    }
+    .sticky-top-glass {
+      background: var(--surface-elevated);
+      height: var(--search-height, auto);
+      margin-bottom: 0;
+      pointer-events: auto;
+      transition: height .25s var(--spring-ease), border-radius .25s var(--spring-ease),
+        background .25s ease, box-shadow .25s ease;
     }
 
     .sticky-top-glass.scrolled-compact {
-      border-radius: var(--radius-pill) !important;
-      padding: 12px 24px !important;
-      cursor: pointer;
-    }
-
-    .sticky-top-glass.scrolled-compact:hover {
-      transform: scale(1.01);
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      box-shadow: var(--glass-border), var(--menu-shadow);
+      border-radius: var(--radius-pill);
+      height: 52px;
     }
 
     .compact-summary-bar {
-      display: none;
+      position: absolute;
+      inset: 0;
+      display: flex;
       align-items: center;
       justify-content: space-between;
-      width: 100%;
+      gap: 8px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: inherit;
+      background: transparent;
+      color: var(--text-primary);
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity .18s ease, visibility .18s;
     }
 
     .sticky-top-glass.scrolled-compact .compact-summary-bar {
-      display: flex;
-      animation: fadeInLiquid 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      visibility: visible;
+      opacity: 1;
+      transition-delay: .08s, 0s;
     }
 
+    .full-search-form { transition: opacity .15s ease, transform .25s var(--spring-ease), visibility .15s; }
     .sticky-top-glass.scrolled-compact .full-search-form {
-      display: none !important;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(-6px);
     }
 
     .compact-route-text {
@@ -151,7 +177,14 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
+    .compact-route-text > span:not(.route-arrow) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .compact-edit-icon { font-size: 1.1rem; }
 
     .compact-route-text .route-arrow {
       color: var(--accent-primary);
@@ -187,11 +220,9 @@
       }
       body { padding: 10px; }
       .header-panel { padding: 18px; }
-      .sticky-top-glass { top: 8px; }
-      .sticky-top-glass.scrolled-compact {
-        padding: 8px 16px !important;
-      }
+      .search-anchor { top: 8px; }
       .compact-route-text { font-size: 13px; }
+      .result-controls:not(.is-open) { display: none; }
     }
 
     /* Content Cards (Solid Elevated Surfaces) */
@@ -256,16 +287,15 @@
       animation: instantClearFlash 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    /* Liquid Glass Autocomplete Dropdown */
+    /* Opaque surface for scannable search suggestions */
     .autocomplete-suggestions {
       position: absolute;
       top: calc(100% + 8px);
       left: 0;
       right: 0;
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-border), 0 12px 32px rgba(0,0,0,0.4);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-strong);
+      box-shadow: var(--menu-shadow);
       border-radius: 16px;
       max-height: 260px;
       overflow-y: auto;
@@ -278,7 +308,7 @@
 
     .autocomplete-suggestions.show {
       display: block;
-      animation: fadeInLiquid 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: fadeInLiquid .16s var(--spring-ease);
     }
 
     @keyframes fadeInLiquid {
@@ -287,6 +317,7 @@
     }
 
     .autocomplete-suggestion-item {
+      min-height: 44px;
       padding: 8px 12px;
       border-radius: 8px;
       font-size: 13px;
@@ -300,8 +331,7 @@
     }
     .autocomplete-suggestion-item:hover,
     .autocomplete-suggestion-item.active {
-      background: var(--accent-primary);
-      color: #ffffff;
+      background: var(--glass-tint);
     }
 
     /* System Micro-Pills */
@@ -420,24 +450,33 @@
     /* Floating Liquid Compare Dock */
     .compare-float-bar {
       position: fixed;
-      bottom: 24px;
+      bottom: max(16px, env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%) translateY(120px);
       background: var(--glass-bg);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-border), 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: var(--glass-border), var(--menu-shadow);
       color: var(--text-primary);
-      padding: 12px 24px;
+      padding: 10px 16px;
       border-radius: var(--radius-pill);
       z-index: 1050;
-      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      width: max-content;
+      max-width: calc(100% - 24px);
+      visibility: hidden;
+      opacity: 0;
+      transition: transform .34s var(--spring-ease), opacity .2s ease, visibility .34s;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
       margin-bottom: 0;
     }
-    .compare-float-bar.active { transform: translateX(-50%) translateY(0); }
+    .compare-float-bar.active { transform: translateX(-50%) translateY(0); visibility: visible; opacity: 1; }
+    .compare-float-bar button { min-height: 36px; }
+    @media (max-width: 420px) {
+      .compare-float-bar { gap: 6px; padding: 8px 10px; font-size: .78rem; }
+      .compare-float-bar button { padding-inline: 8px !important; }
+    }
 
     /* Side Drawer Liquid Glass Structure */
     .drawer-backdrop {
@@ -451,10 +490,8 @@
       position: fixed; top: 0; right: -500px; width: 100%; max-width: 480px; height: 100vh;
       border-radius: 0; z-index: 10060; transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex; flex-direction: column; padding: 0;
-      background: var(--glass-bg);
-      backdrop-filter: var(--glass-blur);
-      -webkit-backdrop-filter: var(--glass-blur);
-      box-shadow: var(--glass-border);
+      background: var(--surface-elevated);
+      box-shadow: var(--menu-shadow);
     }
     .side-drawer.active { right: 0; }
     .drawer-header { padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; }
@@ -505,37 +542,96 @@
     }
     .app-toast.show { opacity: 1; transform: translateY(0); }
     .quote-sheet {
-      width: min(100%, 440px);
+      width: min(100%, 470px);
       max-width: 100%;
       max-height: 92vh;
       max-height: 92dvh;
-      padding: 20px;
+      padding: clamp(12px, 4vw, 22px);
       border: 1px solid var(--border-strong);
       border-radius: 22px;
       background: var(--surface-elevated);
       color: var(--text-primary);
       box-shadow: 0 16px 64px rgba(0, 0, 0, .35);
+      overscroll-behavior: contain;
     }
-    .quote-sheet::backdrop { background: rgba(0, 0, 0, .52); }
+    .quote-sheet[open] { animation: quote-sheet-in .34s var(--spring-ease) both; }
+    .quote-sheet::backdrop { background: rgba(0, 0, 0, .52); animation: quote-backdrop-in .22s ease both; }
+    @keyframes quote-sheet-in {
+      from { opacity: 0; transform: translateY(28px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes quote-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
     .quote-sheet header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
     .quote-close { min-height: 44px; color: var(--text-primary); }
     .quote-context { font-size: .875rem; overflow-wrap: anywhere; }
-    .quote-option {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 52px;
-      padding: 8px 12px;
-      border: 1px solid transparent;
-      border-radius: 12px;
+    .quote-context, #quoteOptionHint, #quoteNotice { color: var(--quote-secondary) !important; }
+    .quote-track {
+      --quote-stop: 0;
+      position: relative;
+      isolation: isolate;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      padding: 4px;
+      border-radius: 22px;
       background: var(--surface-secondary);
-      cursor: pointer;
+      box-shadow: inset 0 0 0 1px var(--border-subtle);
+      touch-action: pan-y;
+      user-select: none;
     }
-    .quote-option + .quote-option { margin-top: 6px; }
-    .quote-option:has(input:checked) { border-color: var(--accent-primary); }
-    .quote-option input { accent-color: var(--accent-primary); }
-    .quote-option strong { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+    .quote-track[hidden] { display: none; }
+    .quote-track:has(.quote-option:nth-of-type(2) input:checked) { --quote-stop: 1; }
+    .quote-track:has(.quote-option:nth-of-type(3) input:checked) { --quote-stop: 2; }
+    .quote-track:has(.quote-option:nth-of-type(4) input:checked) { --quote-stop: 3; }
+    .quote-thumb {
+      position: absolute;
+      z-index: -1;
+      top: 4px;
+      bottom: 4px;
+      left: 4px;
+      width: calc((100% - 8px) / 4);
+      border-radius: 18px;
+      background: linear-gradient(165deg, var(--glass-glint), transparent 70%), var(--glass-tint);
+      background: linear-gradient(165deg, var(--glass-glint), transparent 70%),
+        color-mix(in srgb, var(--glass-tint) 88%, transparent);
+      box-shadow: var(--glass-border), 0 3px 9px rgba(0, 0, 0, .17);
+      opacity: 0;
+      transform: translateX(calc(var(--quote-stop) * 100%));
+      transition: transform .32s var(--spring-ease), opacity .14s ease;
+      pointer-events: none;
+    }
+    .quote-track:has(input:checked) .quote-thumb { opacity: 1; }
+    .quote-track:active .quote-thumb { transition-duration: .17s, .14s; }
+    .quote-option {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 3px;
+      min-height: 56px;
+      padding: 6px 2px;
+      border-radius: 18px;
+      cursor: pointer;
+      text-align: center;
+      font-size: clamp(.68rem, 2.8vw, .84rem);
+      line-height: 1.2;
+    }
+    .quote-option:has(input:checked) { box-shadow: inset 0 0 0 1px var(--border-strong); }
+    .quote-option:has(input:focus-visible) { outline: 2px solid var(--accent-primary); outline-offset: -2px; }
+    .quote-option strong { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
     .quote-submit { min-height: 48px; }
+    .quote-carrier { padding: 12px 0; border-block-start: 1px solid var(--border-subtle); }
+    .quote-carrier legend { float: none; width: auto; margin: 0; font-size: .95rem; font-weight: 700; }
+    .quote-carrier-validity { font-size: .78rem; color: var(--quote-secondary); }
+    .quote-actions {
+      position: sticky;
+      bottom: 0;
+      display: flex;
+      gap: 8px;
+      padding-top: 8px;
+      background: var(--surface-elevated);
+    }
+    .quote-actions > button { flex: 1; }
     .rate-trend { font-size: .8rem; font-weight: 700; white-space: nowrap; }
     .rate-trend.up { color: #ff6961; }
     .rate-trend.down { color: #30d158; }
@@ -549,6 +645,25 @@
         border-radius: 22px 22px 0 0;
         padding-bottom: max(20px, env(safe-area-inset-bottom));
       }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sticky-top-glass, .compact-summary-bar, .full-search-form,
+      .compare-float-bar, .quote-thumb { transition: none; }
+      .quote-track:active .quote-thumb { transition: none; }
+      .autocomplete-suggestions.show, .quote-sheet[open], .quote-sheet::backdrop { animation: none; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      :root { --glass-bg: var(--surface-elevated); --glass-blur: none; }
+      .drawer-backdrop { backdrop-filter: none; }
+      .quote-thumb { background: var(--glass-tint); }
+    }
+    @media (forced-colors: active) {
+      .quote-option:has(input:checked) {
+        forced-color-adjust: none;
+        color: HighlightText;
+        background: Highlight;
+      }
+      .quote-option:has(input:focus-visible) { outline: 2px dashed ButtonText; }
     }
   </style>
 </head>
@@ -570,60 +685,63 @@
   <div id="mainAppContent" class="container-fluid d-none" style="max-width: 1180px; margin: 0 auto;">
     
     <!-- Dynamic Sticky Search Bar (Liquid Glass) -->
-    <div id="stickyHeader" class="header-panel sticky-top-glass" onclick="handleHeaderClick()">
+    <div id="searchAnchor" class="search-anchor">
+      <div id="stickyHeader" class="header-panel sticky-top-glass">
       
-      <!-- Scrolled Compact Summary State -->
-      <div class="compact-summary-bar">
-        <div class="compact-route-text">
-          <span id="compactPolText">Origin Port</span>
-          <span class="route-arrow">➔</span>
-          <span id="compactPodText">Discharge Port</span>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-          <span id="compactEquipText" class="compact-equip-badge">20'GP</span>
-          <button class="btn btn-sm btn-primary rounded-circle p-1 d-flex align-items-center justify-content-center" style="width:28px; height:28px; background:var(--accent-primary); border:none;">🔍</button>
+        <!-- Scrolled Compact Summary State -->
+        <button type="button" id="compactSearchToggle" class="compact-summary-bar" aria-label="Edit search" aria-controls="fullSearchForm" aria-expanded="true" inert onclick="editRateSearch()">
+          <span class="compact-route-text">
+            <span id="compactPolText">Origin Port</span>
+            <span class="route-arrow">➔</span>
+            <span id="compactPodText">Discharge Port</span>
+          </span>
+          <span class="d-flex align-items-center gap-2 flex-shrink-0">
+            <span id="compactEquipText" class="compact-equip-badge">20'GP</span>
+            <span class="compact-edit-icon" aria-hidden="true">✎</span>
+          </span>
+        </button>
+
+        <!-- Expanded State Form -->
+        <div id="fullSearchForm" class="full-search-form row g-2 align-items-end" tabindex="-1" role="group" aria-label="Search freight rates">
+          <div class="col-12 col-md-3">
+            <label class="meta-label">Port of Loading (POL)</label>
+            <div class="autocomplete-container" id="polContainer">
+              <input type="text" id="polInput" class="apple-input" placeholder="Connecting database..." disabled autocomplete="off">
+              <input type="hidden" id="pol">
+              <ul id="polSuggestions" class="autocomplete-suggestions"></ul>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-1 route-arrow-wrapper">
+            ➔
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="meta-label">Port of Discharge (POD)</label>
+            <div class="autocomplete-container" id="podContainer">
+              <input type="text" id="podInput" class="apple-input" placeholder="Connecting database..." disabled autocomplete="off">
+              <input type="hidden" id="pod">
+              <ul id="podSuggestions" class="autocomplete-suggestions"></ul>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-3">
+            <label class="meta-label">Equipment Profile</label>
+            <div class="autocomplete-container" id="equipContainer">
+              <input type="text" id="equipmentInput" class="apple-input" placeholder="Connecting database..." disabled autocomplete="off">
+              <input type="hidden" id="equipment">
+              <ul id="equipmentSuggestions" class="autocomplete-suggestions"></ul>
+            </div>
+          </div>
+
+          <div class="col-12 col-md-2">
+            <button id="searchBtn" onclick="runRateSearchQuery()" class="btn btn-primary px-3 py-2 w-100 fw-bold rounded-3" style="background:var(--accent-primary); border:none;" disabled>
+              🔍 Search
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Expanded State Form -->
-      <div class="full-search-form row g-2 align-items-end">
-        <div class="col-12 col-md-3">
-          <label class="meta-label">Port of Loading (POL)</label>
-          <div class="autocomplete-container" id="polContainer">
-            <input type="text" id="polInput" class="apple-input" placeholder="Connecting database..." disabled autocomplete="off">
-            <input type="hidden" id="pol">
-            <ul id="polSuggestions" class="autocomplete-suggestions"></ul>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-1 route-arrow-wrapper">
-          ➔
-        </div>
-
-        <div class="col-12 col-md-3">
-          <label class="meta-label">Port of Discharge (POD)</label>
-          <div class="autocomplete-container" id="podContainer">
-            <input type="text" id="podInput" class="apple-input" placeholder="Connecting database..." disabled autocomplete="off">
-            <input type="hidden" id="pod">
-            <ul id="podSuggestions" class="autocomplete-suggestions"></ul>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-3">
-          <label class="meta-label">Equipment Profile</label>
-          <div class="autocomplete-container" id="equipContainer">
-            <input type="text" id="equipmentInput" class="apple-input" placeholder="Connecting database..." disabled autocomplete="off">
-            <input type="hidden" id="equipment">
-            <ul id="equipmentSuggestions" class="autocomplete-suggestions"></ul>
-          </div>
-        </div>
-
-        <div class="col-12 col-md-2">
-          <button id="searchBtn" onclick="runRateSearchQuery()" class="btn btn-primary px-3 py-2 w-100 fw-bold rounded-3" style="background:var(--accent-primary); border:none;" disabled>
-            🔍 Search
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Header App Overview Container -->
@@ -646,99 +764,103 @@
       <div id="recentSearchesContainer" class="d-flex gap-2 flex-wrap"></div>
     </div>
 
-    <!-- Live Statistics Banner Header -->
-    <div id="statsBanner" class="header-panel py-3 px-3 d-none">
-      <div class="row text-center g-2 align-items-center">
-        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
-          <div class="meta-label" style="font-size: 9px;">Matches</div>
-          <div class="fw-bold" style="font-size: 14px;" id="statMatchCount">0</div>
-        </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
-          <div class="meta-label" style="font-size: 9px;">Cheapest Rate</div>
-          <div class="fw-bold" style="font-size: 14px; color: #30d158;" id="statCheapestRate">-</div>
-        </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
-          <div class="meta-label" style="font-size: 9px;">Average Rate</div>
-          <div class="fw-bold" style="font-size: 14px; color: var(--accent-primary);" id="statAverageRate">-</div>
-        </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
-          <div class="meta-label" style="font-size: 9px;">Highest Rate</div>
-          <div class="fw-bold" style="font-size: 14px; color: #ff453a;" id="statHighestRate">-</div>
-        </div>
-        <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
-          <div class="meta-label" style="font-size: 9px;">Lowest TT / Max FT</div>
-          <div class="fw-bold" style="font-size: 13px;" id="statTtFt">-</div>
-        </div>
-        <div class="col-6 col-sm-4 col-md-2">
-          <div class="meta-label" style="font-size: 9px;">Spot / Expired</div>
-          <div class="fw-bold text-muted" style="font-size: 13px;" id="statSpotExpired">-</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Criteria Filters & Options Bar -->
-    <div id="filterControlsBar" class="header-panel py-3 px-3 d-none">
-      <div class="row g-2 align-items-center">
-        <div class="col-12 col-md-3">
-          <label class="meta-label" style="font-size:10px;">Sort Results By</label>
-          <select id="sortOption" class="apple-input py-1" onchange="processAndRenderResults()">
-            <option value="cheapest" selected>Cheapest Rate (Default)</option>
-            <option value="highest">Highest Rate</option>
-            <option value="carrier_asc">Carrier (A-Z)</option>
-            <option value="carrier_desc">Carrier (Z-A)</option>
-            <option value="ft_asc">Lowest Free Time</option>
-            <option value="ft_desc">Highest Free Time</option>
-            <option value="tt_asc">Lowest Transit Time</option>
-            <option value="tt_desc">Highest Transit Time</option>
-            <option value="validity_soon">Validity (Expires Soon)</option>
-            <option value="validity_new">Validity (Newest First)</option>
-            <option value="imported_new">Recently Imported</option>
-            <option value="imported_old">Oldest Imported</option>
-            <option value="spot_first">Spot Rates First</option>
-            <option value="standard_first">Standard Rates First</option>
-          </select>
-        </div>
-
-        <div class="col-6 col-md-2">
-          <label class="meta-label" style="font-size:10px;">Carrier</label>
-          <select id="filterCarrier" class="apple-input py-1" onchange="processAndRenderResults()">
-            <option value="all">All Carriers</option>
-          </select>
-        </div>
-
-        <div class="col-6 col-md-2">
-          <label class="meta-label" style="font-size:10px;">Rate Type</label>
-          <select id="filterType" class="apple-input py-1" onchange="processAndRenderResults()">
-            <option value="all">All Types</option>
-            <option value="spot">Spot Only</option>
-            <option value="standard">Standard Only</option>
-          </select>
-        </div>
-
-        <div class="col-6 col-md-2">
-          <label class="meta-label" style="font-size:10px;">Validity Status</label>
-          <select id="filterStatus" class="apple-input py-1" onchange="processAndRenderResults()">
-            <option value="all">All Statuses</option>
-            <option value="valid">Valid Only</option>
-            <option value="expired">Expired Only</option>
-          </select>
-        </div>
-
-        <div class="col-6 col-md-3 text-md-end">
-          <label class="meta-label d-block" style="font-size:10px;">View Mode</label>
-          <button id="layoutToggleBtn" onclick="toggleLayoutMode()" class="quick-action-btn py-2 px-3 fw-bold" disabled>
-            📋 Switch to Tabular View
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section Heading Label Bar -->
-    <div class="header-panel p-2 d-flex justify-content-between align-items-center px-3 mb-3">
-      <div class="d-flex align-items-center gap-2">
-        <span class="meta-label m-0" style="font-size:12px;">Active Freight Match Results</span>
+    <!-- Results heading and compact phone controls -->
+    <div class="header-panel p-2 d-flex justify-content-between align-items-center gap-2 px-3 mb-3">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="meta-label m-0" style="font-size:12px;">Freight Results</span>
         <span id="resultCount" class="badge rounded-pill font-weight-bold" style="background: var(--surface-secondary); color: var(--text-primary);">0 options</span>
       </div>
+      <button type="button" id="mobileResultControls" class="quick-action-btn d-md-none" aria-controls="resultControls" aria-expanded="false" hidden onclick="toggleResultControls()">Filters &amp; Stats</button>
+    </div>
+
+    <div id="resultControls" class="result-controls">
+      <!-- Live Statistics Banner Header -->
+      <div id="statsBanner" class="header-panel py-3 px-3 d-none">
+        <div class="row text-center g-2 align-items-center">
+          <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
+            <div class="meta-label" style="font-size: 9px;">Matches</div>
+            <div class="fw-bold" style="font-size: 14px;" id="statMatchCount">0</div>
+          </div>
+          <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
+            <div class="meta-label" style="font-size: 9px;">Cheapest Rate</div>
+            <div class="fw-bold" style="font-size: 14px; color: #30d158;" id="statCheapestRate">-</div>
+          </div>
+          <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
+            <div class="meta-label" style="font-size: 9px;">Average Rate</div>
+            <div class="fw-bold" style="font-size: 14px; color: var(--accent-primary);" id="statAverageRate">-</div>
+          </div>
+          <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
+            <div class="meta-label" style="font-size: 9px;">Highest Rate</div>
+            <div class="fw-bold" style="font-size: 14px; color: #ff453a;" id="statHighestRate">-</div>
+          </div>
+          <div class="col-6 col-sm-4 col-md-2 border-end" style="border-color: var(--border-subtle) !important;">
+            <div class="meta-label" style="font-size: 9px;">Lowest TT / Max FT</div>
+            <div class="fw-bold" style="font-size: 13px;" id="statTtFt">-</div>
+          </div>
+          <div class="col-6 col-sm-4 col-md-2">
+            <div class="meta-label" style="font-size: 9px;">Spot / Expired</div>
+            <div class="fw-bold text-muted" style="font-size: 13px;" id="statSpotExpired">-</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Criteria Filters & Options Bar -->
+      <div id="filterControlsBar" class="header-panel py-3 px-3 d-none">
+        <div class="row g-2 align-items-center">
+          <div class="col-12 col-md-3">
+            <label class="meta-label" style="font-size:10px;">Sort Results By</label>
+            <select id="sortOption" class="apple-input py-1" onchange="processAndRenderResults()">
+              <option value="cheapest" selected>Cheapest Rate (Default)</option>
+              <option value="highest">Highest Rate</option>
+              <option value="carrier_asc">Carrier (A-Z)</option>
+              <option value="carrier_desc">Carrier (Z-A)</option>
+              <option value="ft_asc">Lowest Free Time</option>
+              <option value="ft_desc">Highest Free Time</option>
+              <option value="tt_asc">Lowest Transit Time</option>
+              <option value="tt_desc">Highest Transit Time</option>
+              <option value="validity_soon">Validity (Expires Soon)</option>
+              <option value="validity_new">Validity (Newest First)</option>
+              <option value="imported_new">Recently Imported</option>
+              <option value="imported_old">Oldest Imported</option>
+              <option value="spot_first">Spot Rates First</option>
+              <option value="standard_first">Standard Rates First</option>
+            </select>
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="meta-label" style="font-size:10px;">Carrier</label>
+            <select id="filterCarrier" class="apple-input py-1" onchange="processAndRenderResults()">
+              <option value="all">All Carriers</option>
+            </select>
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="meta-label" style="font-size:10px;">Rate Type</label>
+            <select id="filterType" class="apple-input py-1" onchange="processAndRenderResults()">
+              <option value="all">All Types</option>
+              <option value="spot">Spot Only</option>
+              <option value="standard">Standard Only</option>
+            </select>
+          </div>
+
+          <div class="col-6 col-md-2">
+            <label class="meta-label" style="font-size:10px;">Validity Status</label>
+            <select id="filterStatus" class="apple-input py-1" onchange="processAndRenderResults()">
+              <option value="all">All Statuses</option>
+              <option value="valid">Valid Only</option>
+              <option value="expired">Expired Only</option>
+            </select>
+          </div>
+
+          <div class="col-6 col-md-3 text-md-end">
+            <label class="meta-label d-block" style="font-size:10px;">View Mode</label>
+            <button id="layoutToggleBtn" onclick="toggleLayoutMode()" class="quick-action-btn py-2 px-3 fw-bold" disabled>
+              📋 Switch to Tabular View
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div id="resultsWrapper">
@@ -751,9 +873,10 @@
 
   <!-- Floating Liquid Compare Action Trigger Dock -->
   <div id="compareFloatBar" class="compare-float-bar">
-    <div><span class="fw-bold" id="compareCountText">0</span> items selected</div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-primary fw-bold rounded-pill px-3" style="background:var(--accent-primary); border:none;" onclick="openCompareModal()">Compare</button>
+    <div><span class="fw-bold" id="compareCountText">0</span> selected</div>
+    <div class="d-flex gap-1">
+      <button class="btn btn-sm btn-primary fw-bold rounded-pill px-3 text-nowrap" onclick="openSelectedQuotes()">Quote Selected</button>
+      <button class="btn btn-sm quick-action-btn px-2" onclick="openCompareModal()">Compare</button>
       <button class="btn btn-sm btn-link text-decoration-none" style="color:var(--text-secondary);" onclick="clearSelectedCompare()">Clear</button>
     </div>
   </div>
@@ -844,18 +967,29 @@
         <button type="button" id="quoteCancel" class="btn quote-close" autofocus>Cancel</button>
       </header>
       <p id="quoteContext" class="quote-context mb-3"></p>
-      <fieldset id="quoteOptions">
-        <legend class="visually-hidden">Quote price</legend>
-        <label class="quote-option"><input type="radio" name="quotePrice" value="10"><span>+10%</span><strong></strong></label>
-        <label class="quote-option"><input type="radio" name="quotePrice" value="12.5"><span>+12.5%</span><strong></strong></label>
-        <label class="quote-option"><input type="radio" name="quotePrice" value="15"><span>+15%</span><strong></strong></label>
-        <hr class="my-2">
-        <label class="quote-option"><input type="radio" name="quotePrice" value="net"><span>Net/Net<small class="d-block">Original carrier rate</small></span><strong></strong></label>
-      </fieldset>
-      <p id="quoteNotice" class="small mt-3 mb-0" role="status"></p>
-      <button type="submit" id="quoteSubmit" class="btn btn-primary w-100 mt-3 quote-submit" disabled>Copy Quote</button>
+      <p id="quoteOptionHint" class="small mt-2">Tap or slide to select. Net/Net uses the original rate.</p>
+      <div id="quoteOptions"></div>
+      <p id="quoteNotice" class="small mt-2 mb-0" role="status"></p>
+      <div class="quote-actions">
+        <button type="submit" id="quoteSubmit" class="btn btn-primary quote-submit" disabled>Copy Quote</button>
+        <button type="submit" id="quoteShare" class="btn btn-outline-primary quote-submit" hidden disabled>Share</button>
+      </div>
     </form>
   </dialog>
+  <template id="quoteCarrierTemplate">
+    <fieldset class="quote-carrier" aria-describedby="quoteOptionHint">
+      <legend></legend>
+      <p class="quote-carrier-validity mb-2"></p>
+      <div class="quote-track">
+        <span class="quote-thumb" aria-hidden="true"></span>
+        <label class="quote-option"><input class="visually-hidden" type="radio" name="quotePrice" data-percent="10" data-fixed="100"><span></span><strong></strong></label>
+        <label class="quote-option"><input class="visually-hidden" type="radio" name="quotePrice" data-percent="12.5" data-fixed="150"><span></span><strong></strong></label>
+        <label class="quote-option"><input class="visually-hidden" type="radio" name="quotePrice" data-percent="15" data-fixed="200"><span></span><strong></strong></label>
+        <label class="quote-option"><input class="visually-hidden" type="radio" name="quotePrice" value="net"><span>Net/Net</span><strong></strong><span class="visually-hidden">Original carrier rate</span></label>
+      </div>
+      <div class="small quote-missing" hidden>Rate unavailable. The quote will show USD -.</div>
+    </fieldset>
+  </template>
 
   <!-- System Floating Toast Feedback -->
   <div id="appToast" class="app-toast" role="status">Copied to clipboard!</div>
@@ -894,43 +1028,67 @@
 
     /* SCROLL LISTENER FOR LIQUID GLASS HEADER COMPACTION */
     function setupScrollHeaderListener() {
+      const anchor = document.getElementById("searchAnchor");
+      const header = document.getElementById("stickyHeader");
+      const form = document.getElementById("fullSearchForm");
+      const measureSearchHeight = () => {
+        if (!form.offsetHeight) return;
+        const frame = getComputedStyle(header);
+        const row = getComputedStyle(form);
+        const extraHeight = [frame.paddingTop, frame.paddingBottom, frame.borderTopWidth,
+          frame.borderBottomWidth, row.marginTop, row.marginBottom].reduce((sum, value) => sum + parseFloat(value), 0);
+        anchor.style.setProperty("--search-height", `${Math.ceil(form.offsetHeight + extraHeight)}px`);
+      };
+      new ResizeObserver(measureSearchHeight).observe(form);
+      window.addEventListener("resize", measureSearchHeight);
+      let previousScroll = window.scrollY;
       window.addEventListener('scroll', () => {
-        const header = document.getElementById("stickyHeader");
         const scrollPosition = window.scrollY;
-
-        if (scrollPosition > 100 && !isHeaderCompact) {
+        const scrollingDown = scrollPosition > previousScroll;
+        previousScroll = scrollPosition;
+        const focused = document.activeElement;
+        const editing = form.contains(focused) && (focused === form || focused.matches("input"));
+        if (activeSearchRoute && scrollingDown && scrollPosition > anchor.offsetHeight + 36 &&
+            !isHeaderCompact && !editing && !form.querySelector(".autocomplete-suggestions.show")) {
           collapseHeader();
         } else if (scrollPosition <= 50 && isHeaderCompact) {
           expandHeader();
         }
-      });
+      }, { passive: true });
     }
 
     function collapseHeader() {
-      const header = document.getElementById("stickyHeader");
-      const pol = document.getElementById("polInput").value || "Select POL";
-      const pod = document.getElementById("podInput").value || "Select POD";
-      const equip = document.getElementById("equipmentInput").value || "Profile";
-
-      document.getElementById("compactPolText").textContent = pol;
-      document.getElementById("compactPodText").textContent = pod;
-      document.getElementById("compactEquipText").textContent = equip;
-
-      header.classList.add("scrolled-compact");
-      isHeaderCompact = true;
+      updateCompactRoute(activeSearchRoute);
+      setHeaderCompact(true);
       closeAllSuggestions();
     }
 
-    function expandHeader() {
-      const header = document.getElementById("stickyHeader");
-      header.classList.remove("scrolled-compact");
-      isHeaderCompact = false;
+    function updateCompactRoute({ pol, pod, equipment }) {
+      document.getElementById("compactPolText").textContent = pol;
+      document.getElementById("compactPodText").textContent = pod;
+      document.getElementById("compactEquipText").textContent = equipment;
     }
 
-    function handleHeaderClick() {
-      if (isHeaderCompact) {
-        expandHeader();
-      }
+    function setHeaderCompact(compact) {
+      const header = document.getElementById("stickyHeader");
+      const toggle = document.getElementById("compactSearchToggle");
+      const form = document.getElementById("fullSearchForm");
+      const restoreFocus = compact ? form.contains(document.activeElement) : document.activeElement === toggle;
+      header.classList.toggle("scrolled-compact", compact);
+      form.inert = compact;
+      toggle.inert = !compact;
+      toggle.setAttribute("aria-expanded", String(!compact));
+      isHeaderCompact = compact;
+      if (restoreFocus) (compact ? toggle : form).focus({ preventScroll: true });
+    }
+
+    function expandHeader() {
+      setHeaderCompact(false);
+    }
+
+    function editRateSearch() {
+      expandHeader();
+      document.getElementById("fullSearchForm").focus({ preventScroll: true });
     }
 
     function setupKeyboardShortcuts() {
@@ -1177,12 +1335,21 @@
       }
 
       const searchId = ++latestRateSearchId;
+      const route = { pol: polVal, pod: podVal, equipment: equipVal };
       saveRecentSearch(polVal, podVal, equipVal);
+      updateCompactRoute(route);
+      activeSearchRoute = null;
+      cachedResultsGlobal = [];
+      selectedCompareCarriers.clear();
+      updateCompareFloatBar();
+      setupFilterControls();
+      document.getElementById("layoutToggleBtn").disabled = true;
+      document.getElementById("resultCount").textContent = "Searching…";
 
       document.getElementById("resultsWrapper").innerHTML = `
         <div class="header-panel text-center py-5">
           <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
-          <div class="small text-muted">Retrieving live ocean tariffs matrix...</div>
+          <div class="small text-muted">Searching live rates…</div>
         </div>`;
 
       fetch(BACKEND_API_URL, {
@@ -1199,19 +1366,29 @@
       .then(res => res.json())
       .then(results => {
         if (searchId !== latestRateSearchId) return;
-        activeSearchRoute = { pol: polVal, pod: podVal, equipment: equipVal };
+        if (!Array.isArray(results)) throw new Error("Invalid rate response");
+        activeSearchRoute = route;
         cachedResultsGlobal = results;
         document.getElementById("layoutToggleBtn").disabled = (results.length === 0);
         setupFilterControls();
         processAndRenderResults();
       })
-      .catch(err => {
+      .catch(() => {
         if (searchId !== latestRateSearchId) return;
-        document.getElementById("resultsWrapper").innerHTML = `<div class="alert alert-danger">${err.message}</div>`;
+        document.getElementById("resultCount").textContent = "Unavailable";
+        const wrapper = document.getElementById("resultsWrapper");
+        wrapper.innerHTML = `
+          <div class="header-panel text-center py-5" role="status">
+            <h6 class="fw-bold">Couldn’t load rates</h6>
+            <p class="small">Try the same search again.</p>
+            <button type="button" class="quick-action-btn">Retry</button>
+          </div>`;
+        wrapper.querySelector("button").addEventListener("click", () => applyRecentSearch(polVal, podVal, equipVal));
       });
     }
 
     function setupFilterControls() {
+      document.getElementById("mobileResultControls").hidden = cachedResultsGlobal.length === 0;
       if (cachedResultsGlobal.length === 0) {
         document.getElementById("statsBanner").classList.add("d-none");
         document.getElementById("filterControlsBar").classList.add("d-none");
@@ -1230,6 +1407,18 @@
         opt.textContent = c;
         carrierSelect.appendChild(opt);
       });
+    }
+
+    const resultFilterIds = ["filterCarrier", "filterType", "filterStatus"];
+
+    function toggleResultControls() {
+      const expanded = document.getElementById("resultControls").classList.toggle("is-open");
+      document.getElementById("mobileResultControls").setAttribute("aria-expanded", String(expanded));
+    }
+
+    function clearResultFilters() {
+      for (const id of resultFilterIds) document.getElementById(id).value = "all";
+      processAndRenderResults();
     }
 
     function toggleLayoutMode() {
@@ -1288,6 +1477,9 @@
       const carrierFilter = document.getElementById("filterCarrier").value;
       const typeFilter = document.getElementById("filterType").value;
       const statusFilter = document.getElementById("filterStatus").value;
+      const activeFilters = [carrierFilter, typeFilter, statusFilter].filter(value => value !== "all").length;
+      document.getElementById("mobileResultControls").textContent = activeFilters
+        ? `Filters & Stats · ${activeFilters}` : "Filters & Stats";
 
       if (carrierFilter !== "all") results = results.filter(r => r.carrier === carrierFilter);
       if (typeFilter === "spot") results = results.filter(r => r.spot === "YES");
@@ -1378,11 +1570,11 @@
       document.getElementById("resultCount").textContent = `${results.length} option(s)`;
 
       if (results.length === 0) {
+        const filtered = cachedResultsGlobal.length > 0;
         container.innerHTML = `
-          <div class="header-panel text-center py-5">
-            <div class="mb-3" style="font-size:36px;">🔍</div>
-            <h6 class="fw-bold mb-2">No Matching Freight Rates Found</h6>
-            <p class="text-muted small mx-auto mb-0" style="max-width: 480px;">No tariffs matching current parameters.</p>
+          <div class="header-panel text-center py-5" role="status">
+            <h6 class="fw-bold mb-2">${filtered ? "No rates match these filters" : "No rates for this lane"}</h6>
+            <button type="button" class="quick-action-btn" onclick="${filtered ? "clearResultFilters()" : "editRateSearch()"}">${filtered ? "Clear filters" : "Edit search"}</button>
           </div>`;
         return;
       }
@@ -1438,7 +1630,6 @@
                     <button class="quick-action-btn" onclick="copyText('${escapedCarrier}')">🚢 Carrier</button>
                     <button class="quick-action-btn" onclick="openQuoteSheet('${escapedCarrier}')">⚡ Quote</button>
                     <button class="quick-action-btn" onclick="copyAllDetails('${escapedCarrier}')">📄 All</button>
-                    <button class="quick-action-btn" onclick="shareQuote('${escapedCarrier}')">🔗 Share</button>
                   </div>
 
                   <div class="text-muted" style="font-size:11px;">Rate updated: ${item.updated}</div>
@@ -1528,6 +1719,7 @@
     }
 
     const quoteAmountFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 20 });
+    const fixedMarkupCutoff = 1000;
 
     function renderRateTrend(item) {
       const percent = item.trend?.percent;
@@ -1546,6 +1738,7 @@
 
     function getQuoteAmount(rate, option) {
       if (option === "net") return rate;
+      if (rate < fixedMarkupCutoff) return Math.ceil((rate + Number(option)) / 25) * 25;
       const multiplier = 1000 + Number(option) * 10;
       return Math.ceil((rate * multiplier) / 25000) * 25;
     }
@@ -1569,86 +1762,170 @@
 
     function openQuoteSheet(carrierName) {
       const item = cachedResultsGlobal.find(r => r.carrier === carrierName);
-      if (!item || !activeSearchRoute) return;
+      if (item) openQuotes([item]);
+    }
 
+    function openSelectedQuotes() {
+      openQuotes(cachedResultsGlobal.filter(item => selectedCompareCarriers.has(item.carrier)));
+    }
+
+    function openQuotes(items) {
+      if (!activeSearchRoute || items.length === 0) return;
       const dialog = document.getElementById("quoteSheet");
-      const form = document.getElementById("quoteForm");
-      const missingRate = item.rateMissing || !Number.isFinite(item.rate);
-      activeQuote = { item, route: activeSearchRoute, missingRate, confirmingExpiry: false, copying: false };
-      form.reset();
       const options = document.getElementById("quoteOptions");
-      options.hidden = missingRate;
-      for (const input of options.querySelectorAll("input")) {
-        input.closest("label").querySelector("strong").textContent =
-          missingRate ? "" : `$${quoteAmountFormat.format(getQuoteAmount(item.rate, input.value))}`;
-      }
+      const entries = items.map((item, index) => createQuoteEntry(item, activeSearchRoute, index));
+      activeQuote = { entries, confirmingExpiry: "", sending: false };
+      options.replaceChildren(...entries.map(entry => entry.group));
+      document.getElementById("quoteTitle").textContent = entries.length === 1 ? "Prepare Quote" : "Prepare Quotes";
+      document.getElementById("quoteShare").hidden = typeof navigator.share !== "function";
+      document.getElementById("quoteOptionHint").hidden = entries.every(entry => entry.missingRate);
       const { pol, pod, equipment } = activeSearchRoute;
-      document.getElementById("quoteContext").textContent =
-        `${item.carrier} · ${pol} → ${pod} · ${equipment} · Validity: ${item.validity}`;
+      document.getElementById("quoteContext").textContent = `${pol} → ${pod} · ${equipment}`;
       updateQuoteSheet();
       dialog.showModal();
       dialog.scrollTop = 0;
     }
 
-    function updateQuoteSheet() {
-      const { item, missingRate, confirmingExpiry, copying } = activeQuote;
-      const option = document.getElementById("quoteForm").elements.quotePrice.value;
-      const submit = document.getElementById("quoteSubmit");
-      const notice = document.getElementById("quoteNotice");
-      submit.disabled = copying || (!missingRate && !option);
-      if (confirmingExpiry) {
-        submit.textContent = "Copy Expired Quote";
-        notice.textContent = "This rate has expired. Confirm that you want to copy it.";
-      } else {
-        submit.textContent = !missingRate && option
-          ? `Copy $${quoteAmountFormat.format(getQuoteAmount(item.rate, option))} Quote`
-          : "Copy Quote";
-        notice.textContent = [
-          isRateExpired(item.validity) ? "This rate has expired." : "",
-          missingRate ? "No price is available. The quote will show USD -." : ""
-        ].filter(Boolean).join(" ");
+    function createQuoteEntry(item, route, index) {
+      const missingRate = item.rateMissing || !Number.isFinite(item.rate);
+      const group = document.getElementById("quoteCarrierTemplate").content.firstElementChild.cloneNode(true);
+      const track = group.querySelector(".quote-track");
+      const validity = group.querySelector(".quote-carrier-validity");
+      group.querySelector("legend").textContent = item.carrier;
+      validity.textContent = `Validity: ${item.validity}${isRateExpired(item.validity) ? " · Expired" : ""}`;
+      track.hidden = missingRate;
+      group.querySelector(".quote-missing").hidden = !missingRate;
+      const useFixedMarkup = item.rate < fixedMarkupCutoff;
+      const stops = [...track.querySelectorAll("input")];
+      for (const input of stops) {
+        input.name = `quotePrice-${index}`;
+        const label = input.closest("label");
+        if (input.dataset.percent) {
+          input.value = useFixedMarkup ? input.dataset.fixed : input.dataset.percent;
+          label.querySelector("span").textContent = useFixedMarkup ? `+$${input.value}` : `+${input.value}%`;
+        }
+        label.querySelector("strong").textContent =
+          missingRate ? "" : `$${quoteAmountFormat.format(getQuoteAmount(item.rate, input.value))}`;
       }
+      if (!missingRate) setupQuoteTrack(track, group, stops);
+      return { item, route, missingRate, group };
+    }
+
+    function getQuoteSelections() {
+      return activeQuote.entries.map(entry => ({
+        entry,
+        option: entry.group.querySelector("input:checked")?.value || ""
+      }));
+    }
+
+    function updateQuoteSheet() {
+      const { entries, confirmingExpiry, sending } = activeQuote;
+      const selections = getQuoteSelections();
+      const submit = document.getElementById("quoteSubmit");
+      const share = document.getElementById("quoteShare");
+      const notice = document.getElementById("quoteNotice");
+      const disabled = sending || selections.some(({ entry, option }) => !entry.missingRate && !option);
+      submit.disabled = share.disabled = disabled;
+      const [{ entry, option }] = selections;
+      const plural = entries.length > 1;
+      const count = plural ? `${entries.length} Quotes` : "Quote";
+      const price = !plural && !entry.missingRate && option
+        ? `$${quoteAmountFormat.format(getQuoteAmount(entry.item.rate, option))} ` : "";
+      submit.textContent = confirmingExpiry === "copy" ? `Copy Expired ${plural ? "Quotes" : "Quote"}` : `Copy ${price}${count}`;
+      share.textContent = confirmingExpiry === "share" ? `Share Expired ${plural ? "Quotes" : "Quote"}` : "Share";
+      const expired = entries.filter(({ item }) => isRateExpired(item.validity));
+      const expiredNames = expired.map(({ item }) => item.carrier).join(", ");
+      notice.textContent = expired.length ? `Expired rate${expired.length > 1 ? "s" : ""}: ${expiredNames}.` : "";
+      if (confirmingExpiry && expired.length) {
+        notice.textContent += ` Confirm you want to ${confirmingExpiry} ${plural ? "these quotes" : "this quote"}.`;
+      }
+    }
+
+    function setupQuoteTrack(track, group, stops) {
+      let gesture = null;
+
+      track.addEventListener("pointerdown", event => {
+        if (!event.isPrimary || event.button !== 0 || group.disabled) return;
+        gesture = { id: event.pointerId, startX: event.clientX, startY: event.clientY, dragging: false };
+      });
+      track.addEventListener("pointermove", event => {
+        if (gesture?.id !== event.pointerId) return;
+        if (!gesture.dragging) {
+          const horizontal = Math.abs(event.clientX - gesture.startX);
+          const vertical = Math.abs(event.clientY - gesture.startY);
+          if (horizontal < 8 || horizontal < vertical) return;
+          gesture.dragging = true;
+          track.setPointerCapture(event.pointerId);
+        }
+        const bounds = track.getBoundingClientRect();
+        const index = Math.floor(((event.clientX - bounds.left) / bounds.width) * stops.length);
+        const stop = stops[Math.max(0, Math.min(stops.length - 1, index))];
+        if (!stop.checked) {
+          stop.checked = true;
+          stop.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+      track.addEventListener("pointerup", event => {
+        if (gesture?.id !== event.pointerId) return;
+        if (gesture.dragging) stops.find(stop => stop.checked)?.focus({ preventScroll: true });
+        gesture = null;
+      });
+      track.addEventListener("pointercancel", () => { gesture = null; });
+      track.addEventListener("pointerleave", () => {
+        if (!gesture?.dragging) gesture = null;
+      });
     }
 
     function setupQuoteSheet() {
       const dialog = document.getElementById("quoteSheet");
       const form = document.getElementById("quoteForm");
       const cancel = document.getElementById("quoteCancel");
-      const options = document.getElementById("quoteOptions");
       cancel.addEventListener("click", () => dialog.close());
       dialog.addEventListener("cancel", event => {
-        if (activeQuote?.copying) event.preventDefault();
+        if (activeQuote?.sending) event.preventDefault();
       });
       form.addEventListener("change", () => {
-        activeQuote.confirmingExpiry = false;
+        activeQuote.confirmingExpiry = "";
         updateQuoteSheet();
       });
       form.addEventListener("submit", async event => {
         event.preventDefault();
         const quote = activeQuote;
-        const option = form.elements.quotePrice.value;
-        if (quote.copying || (!quote.missingRate && !option)) return;
-        if (isRateExpired(quote.item.validity) && !quote.confirmingExpiry) {
-          quote.confirmingExpiry = true;
+        const selections = getQuoteSelections();
+        if (quote.sending || selections.some(({ entry, option }) => !entry.missingRate && !option)) return;
+        const action = event.submitter?.id === "quoteShare" ? "share" : "copy";
+        const hasExpiredRate = quote.entries.some(({ item }) => isRateExpired(item.validity));
+        if (hasExpiredRate && quote.confirmingExpiry !== action) {
+          quote.confirmingExpiry = action;
           updateQuoteSheet();
           return;
         }
 
-        quote.copying = true;
+        const text = selections.map(({ entry, option }) => formatQuote(entry, option)).join("\n\n");
+        quote.sending = true;
         cancel.disabled = true;
-        options.disabled = true;
+        for (const { group } of quote.entries) group.disabled = true;
         updateQuoteSheet();
+        let failed = false;
         try {
-          await navigator.clipboard.writeText(formatQuote(quote, option));
+          if (action === "share") {
+            await navigator.share({ text });
+          } else {
+            await navigator.clipboard.writeText(text);
+            showToast(quote.entries.length > 1 ? "Quotes copied" : "Quote copied");
+          }
           dialog.close();
-          showToast("Quote copied");
-        } catch {
-          document.getElementById("quoteNotice").textContent = "Couldn’t copy the quote. Tap Copy to try again.";
+        } catch (error) {
+          failed = error?.name !== "AbortError";
         } finally {
-          quote.copying = false;
+          quote.sending = false;
+          quote.confirmingExpiry = "";
           cancel.disabled = false;
-          options.disabled = false;
-          document.getElementById("quoteSubmit").disabled = false;
+          for (const { group } of quote.entries) group.disabled = false;
+          updateQuoteSheet();
+        }
+        if (failed) {
+          document.getElementById("quoteNotice").textContent += ` Couldn’t ${action} the quote. Try again.`;
         }
       });
     }
@@ -1664,18 +1941,9 @@
       copyText(detailStr);
     }
 
-    function shareQuote(carrierName) {
-      const item = cachedResultsGlobal.find(r => r.carrier === carrierName);
-      if (!item) return;
-      const pol = document.getElementById("pol").value;
-      const pod = document.getElementById("pod").value;
-      const text = `Ocean Freight Quote: ${item.carrier} (${pol} to ${pod}) - USD $${item.rate}. Valid until ${item.validity}.`;
-      if (navigator.share) navigator.share({ title: 'Freight Quote', text: text });
-      else copyText(text);
-    }
-
     /* COMPARE SELECTION FUNCTIONS */
     function toggleCompareSelection(carrierName, isChecked) {
+      if (!activeSearchRoute) return;
       if (isChecked) selectedCompareCarriers.add(carrierName);
       else selectedCompareCarriers.delete(carrierName);
       updateCompareFloatBar();
@@ -1684,7 +1952,7 @@
     function clearSelectedCompare() {
       selectedCompareCarriers.clear();
       updateCompareFloatBar();
-      processAndRenderResults();
+      if (activeSearchRoute) processAndRenderResults();
     }
 
     function updateCompareFloatBar() {
